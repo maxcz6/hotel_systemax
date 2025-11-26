@@ -3,13 +3,13 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Hotel System</title>
+        <title>Hotel Systemax</title>
         <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     </head>
     <body>
         <div class="guest-layout">
             <div class="guest-card" style="text-align: center;">
-                <h1 style="font-size: 2rem; margin-bottom: 1rem;">Hotel System</h1>
+                <h1 style="font-size: 2rem; margin-bottom: 1rem;">Hotel Systemax</h1>
                 <p style="margin-bottom: 2rem; color: #4b5563;">Welcome to our Hotel Management System.</p>
                 
                 @if (Route::has('login'))
