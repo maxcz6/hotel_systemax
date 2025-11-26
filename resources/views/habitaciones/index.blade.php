@@ -11,6 +11,10 @@
         <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
+        @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
         <div class="card">
             <div class="card-body">
                 <table class="table">
@@ -42,11 +46,15 @@
                                 @endif
                             </td>
                             <td>{{ $habitacion->piso ?? 'N/A' }}</td>
-                            <td>
+                            <td class="actions">
+                                <a href="{{ route('habitaciones.show', $habitacion) }}" class="btn btn-sm btn-secondary">Ver</a>
                                 @if(Auth::user()->role === 'gerente')
-                                    <a href="{{ route('habitaciones.edit', $habitacion) }}" class="action-btn">Editar</a>
-                                @else
-                                    <span style="color: #9ca3af;">Ver</span>
+                                    <a href="{{ route('habitaciones.edit', $habitacion) }}" class="btn btn-sm btn-primary">Editar</a>
+                                    <form action="{{ route('habitaciones.destroy', $habitacion) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Está seguro de eliminar la habitación #{{ $habitacion->numero }}?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                                    </form>
                                 @endif
                             </td>
                         </tr>

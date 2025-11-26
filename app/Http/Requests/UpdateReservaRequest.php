@@ -26,7 +26,21 @@ class UpdateReservaRequest extends FormRequest
             'habitacion_id' => 'required|exists:habitaciones,id',
             'fecha_entrada' => 'required|date',
             'fecha_salida' => 'required|date|after:fecha_entrada',
-            'estado' => 'required|string|in:confirmada,pendiente,cancelada,check-in,check-out',
+            'estado' => 'required|string|in:confirmada,pendiente,cancelada,checkin,checkout',
+            'descuento' => 'nullable|numeric|min:0|max:100',
+            'notas' => 'nullable|string|max:1000',
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation()
+    {
+        // Normalizar check-in y check-out a checkin y checkout (sin guión)
+        if ($this->has('estado')) {
+            $estado = str_replace('-', '', $this->input('estado'));
+            $this->merge(['estado' => $estado]);
+        }
     }
 }

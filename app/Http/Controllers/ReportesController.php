@@ -22,15 +22,15 @@ class ReportesController extends Controller
         $fechaInicio = $request->get('fecha_inicio', Carbon::now()->startOfMonth());
         $fechaFin = $request->get('fecha_fin', Carbon::now()->endOfMonth());
 
-        $ingresos = Pago::whereBetween('fecha', [$fechaInicio, $fechaFin])
-            ->selectRaw('DATE(fecha) as fecha, SUM(monto) as total, metodo_pago')
+        $ingresos = Pago::whereBetween('fecha_pago', [$fechaInicio, $fechaFin])
+            ->selectRaw('DATE(fecha_pago) as fecha, SUM(monto) as total, metodo_pago')
             ->groupBy('fecha', 'metodo_pago')
             ->orderBy('fecha', 'desc')
             ->get();
 
-        $totalIngresos = Pago::whereBetween('fecha', [$fechaInicio, $fechaFin])->sum('monto');
+        $totalIngresos = Pago::whereBetween('fecha_pago', [$fechaInicio, $fechaFin])->sum('monto');
 
-        $ingresosPorMetodo = Pago::whereBetween('fecha', [$fechaInicio, $fechaFin])
+        $ingresosPorMetodo = Pago::whereBetween('fecha_pago', [$fechaInicio, $fechaFin])
             ->selectRaw('metodo_pago, SUM(monto) as total')
             ->groupBy('metodo_pago')
             ->get();
@@ -91,11 +91,11 @@ class ReportesController extends Controller
         $fechaFin = $request->get('fecha_fin', Carbon::now()->endOfMonth());
 
         $serviciosMasUsados = ServicioDetalle::with('servicio')
-            ->whereHas('estancia', function ($query) use ($fechaInicio, $fechaFin) {
-                $query->whereBetween('fecha_checkin', [$fechaInicio, $fechaFin]);
+            ->whereHas('reserva', function ($query) use ($fechaInicio, $fechaFin) {
+                $query->whereBetween('fecha_entrada', [$fechaInicio, $fechaFin]);
             })
-            ->selectRaw('id_servicio, SUM(cantidad) as total_cantidad, SUM(subtotal) as total_ingresos')
-            ->groupBy('id_servicio')
+            ->selectRaw('servicio_id, SUM(cantidad) as total_cantidad, SUM(total) as total_ingresos')
+            ->groupBy('servicio_id')
             ->orderBy('total_cantidad', 'desc')
             ->get();
 
@@ -116,7 +116,7 @@ class ReportesController extends Controller
 
         // Total stats
         $totalReservas = Reserva::whereBetween('fecha_entrada', [$fechaInicio, $fechaFin])->count();
-        $totalIngresos = Pago::whereBetween('fecha', [$fechaInicio, $fechaFin])->sum('monto');
+        $totalIngresos = Pago::whereBetween('fecha_pago', [$fechaInicio, $fechaFin])->sum('monto');
         $totalHabitaciones = Habitacion::count();
         
         // Status breakdown

@@ -1,4 +1,4 @@
-<x-app-layout">
+<x-app-layout>
     <div class="container">
         <div class="page-header">
             <h1>Reporte General</h1>

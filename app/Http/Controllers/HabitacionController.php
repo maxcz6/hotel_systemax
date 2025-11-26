@@ -91,7 +91,24 @@ class HabitacionController extends Controller
      */
     public function destroy(Habitacion $habitacion)
     {
-        $habitacion->delete();
-        return redirect()->route('habitaciones.index')->with('success', 'Habitación eliminada con éxito.');
+        try {
+            // Verificar si tiene reservas asociadas
+            $reservasCount = $habitacion->reservas()->count();
+            
+            if ($reservasCount > 0) {
+                return redirect()->route('habitaciones.index')
+                    ->with('error', "No se puede eliminar la habitación #{$habitacion->numero} porque tiene {$reservasCount} reserva(s) asociada(s). Primero elimine o reasigne las reservas.");
+            }
+            
+            $numeroHabitacion = $habitacion->numero;
+            $habitacion->delete();
+            
+            return redirect()->route('habitaciones.index')
+                ->with('success', "Habitación #{$numeroHabitacion} eliminada con éxito.");
+                
+        } catch (\Exception $e) {
+            return redirect()->route('habitaciones.index')
+                ->with('error', 'Error al eliminar la habitación: ' . $e->getMessage());
+        }
     }
 }

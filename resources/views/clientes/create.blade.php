@@ -18,12 +18,15 @@
                                    name="nombre" 
                                    id="nombre" 
                                    value="{{ old('nombre') }}" 
-                                   class="form-control" 
+                                   class="form-control @error('nombre') is-invalid @enderror" 
                                    placeholder="Nombre del cliente"
-                                   required>
+                                   required
+                                   minlength="2"
+                                   maxlength="255">
                             @error('nombre')
                             <span class="error-message">{{ $message }}</span>
                             @enderror
+                            <small class="form-text">Solo letras y espacios, mínimo 2 caracteres</small>
                         </div>
 
                         <div class="form-group">
@@ -32,42 +35,32 @@
                                    name="apellido" 
                                    id="apellido" 
                                    value="{{ old('apellido') }}" 
-                                   class="form-control" 
+                                   class="form-control @error('apellido') is-invalid @enderror" 
                                    placeholder="Apellido del cliente"
-                                   required>
+                                   required
+                                   minlength="2"
+                                   maxlength="255">
                             @error('apellido')
                             <span class="error-message">{{ $message }}</span>
                             @enderror
+                            <small class="form-text">Solo letras y espacios, mínimo 2 caracteres</small>
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="tipo_documento" class="form-label">Tipo de Documento *</label>
-                            <select name="tipo_documento" id="tipo_documento" class="form-control" required>
-                                <option value="">Seleccione tipo</option>
-                                <option value="DNI" {{ old('tipo_documento') == 'DNI' ? 'selected' : '' }}>DNI</option>
-                                <option value="Pasaporte" {{ old('tipo_documento') == 'Pasaporte' ? 'selected' : '' }}>Pasaporte</option>
-                                <option value="Carnet Extranjería" {{ old('tipo_documento') == 'Carnet Extranjería' ? 'selected' : '' }}>Carnet de Extranjería</option>
-                            </select>
-                            @error('tipo_documento')
-                            <span class="error-message">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <label for="numero_documento" class="form-label">Número de Documento *</label>
-                            <input type="text" 
-                                   name="numero_documento" 
-                                   id="numero_documento" 
-                                   value="{{ old('numero_documento') }}" 
-                                   class="form-control" 
-                                   placeholder="Número de documento"
-                                   required>
-                            @error('numero_documento')
-                            <span class="error-message">{{ $message }}</span>
-                            @enderror
-                        </div>
+                    <div class="form-group">
+                        <label for="dni" class="form-label">DNI</label>
+                        <input type="text" 
+                               name="dni" 
+                               id="dni" 
+                               value="{{ old('dni') }}" 
+                               class="form-control @error('dni') is-invalid @enderror" 
+                               placeholder="DNI de 8 dígitos"
+                               maxlength="8"
+                               pattern="[0-9]{8}">
+                        @error('dni')
+                        <span class="error-message">{{ $message }}</span>
+                        @enderror
+                        <small class="form-text">DNI peruano de 8 dígitos (opcional)</small>
                     </div>
 
                     <h3 style="margin-top: 1.5rem;">Información de Contacto</h3>
@@ -78,9 +71,10 @@
                                name="email" 
                                id="email" 
                                value="{{ old('email') }}" 
-                               class="form-control" 
+                               class="form-control @error('email') is-invalid @enderror" 
                                placeholder="correo@ejemplo.com"
-                               required>
+                               required
+                               maxlength="255">
                         @error('email')
                         <span class="error-message">{{ $message }}</span>
                         @enderror
@@ -92,11 +86,14 @@
                                name="telefono" 
                                id="telefono" 
                                value="{{ old('telefono') }}" 
-                               class="form-control" 
-                               placeholder="+51 999 999 999">
+                               class="form-control @error('telefono') is-invalid @enderror" 
+                               placeholder="999999999"
+                               maxlength="9"
+                               pattern="[9][0-9]{8}">
                         @error('telefono')
                         <span class="error-message">{{ $message }}</span>
                         @enderror
+                        <small class="form-text">Celular de 9 dígitos que empiece con 9 (opcional)</small>
                     </div>
 
                     <div class="form-group">
@@ -104,11 +101,13 @@
                         <textarea name="direccion" 
                                   id="direccion" 
                                   rows="2" 
-                                  class="form-control" 
-                                  placeholder="Dirección completa del cliente">{{ old('direccion') }}</textarea>
+                                  class="form-control @error('direccion') is-invalid @enderror" 
+                                  placeholder="Dirección completa del cliente"
+                                  maxlength="500">{{ old('direccion') }}</textarea>
                         @error('direccion')
                         <span class="error-message">{{ $message }}</span>
                         @enderror
+                        <small class="form-text">Mínimo 5 caracteres (opcional)</small>
                     </div>
 
                     <div class="form-actions">

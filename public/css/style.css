@@ -326,37 +326,6 @@ header h2 {
     font-size: 1rem;
 }
 
-.delete-btn:hover {
-    color: #dc2626;
-}
-
-/* Alerts */
-.alert {
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-radius: 0.375rem;
-}
-
-.alert-success {
-    background-color: #d1fae5;
-    color: #065f46;
-}
-
-.alert-error {
-    background-color: #fee2e2;
-    color: #991b1b;
-}
-
-.text-error {
-    color: #dc2626;
-    font-size: 0.875rem;
-}
-
-.text-success {
-    color: #059669;
-    font-size: 0.875rem;
-}
-
 .text-sm {
     font-size: 0.875rem;
 }

@@ -64,7 +64,24 @@ class ClienteController extends Controller
      */
     public function destroy(Cliente $cliente)
     {
-        $cliente->delete();
-        return redirect()->route('clientes.index')->with('success', 'Cliente eliminado con éxito.');
+        try {
+            // Verificar si tiene reservas asociadas
+            $reservasCount = $cliente->reservas()->count();
+            
+            if ($reservasCount > 0) {
+                return redirect()->route('clientes.index')
+                    ->with('error', "No se puede eliminar el cliente {$cliente->nombre} {$cliente->apellido} porque tiene {$reservasCount} reserva(s) asociada(s). Primero elimine o reasigne las reservas.");
+            }
+            
+            $nombreCompleto = $cliente->nombre . ' ' . $cliente->apellido;
+            $cliente->delete();
+            
+            return redirect()->route('clientes.index')
+                ->with('success', "Cliente {$nombreCompleto} eliminado con éxito.");
+                
+        } catch (\Exception $e) {
+            return redirect()->route('clientes.index')
+                ->with('error', 'Error al eliminar el cliente: ' . $e->getMessage());
+        }
     }
 }

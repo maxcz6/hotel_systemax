@@ -1,59 +1,108 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🏨 Hotel Systemax
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema integral de gestión hotelera desarrollado con Laravel 12. Diseñado para optimizar la administración de reservas, habitaciones, clientes y reportes financieros.
 
-## About Laravel
+## 🚀 Características Principales
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### 👥 Gestión de Usuarios y Roles
+*   **Gerente**: Acceso total al sistema, incluyendo gestión de habitaciones, tipos de habitación, servicios y reportes avanzados.
+*   **Recepción**: Acceso enfocado en la operación diaria: gestión de clientes, reservas, check-in/check-out y pagos.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 🛏️ Gestión de Habitaciones
+*   Control de tipos de habitación (Simple, Doble, Suite, etc.) con capacidad y precios configurables.
+*   Estados de habitación en tiempo real: Disponible, Ocupada, Limpieza, Mantenimiento.
+*   Validaciones de precios y capacidad.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 📅 Gestión de Reservas
+*   Flujo completo de reserva: Pendiente -> Confirmada -> Check-in -> Check-out.
+*   Validación de disponibilidad por fechas.
+*   Cálculo automático de costos y descuentos.
+*   Registro de notas y observaciones.
 
-## Learning Laravel
+### 👤 Gestión de Clientes
+*   Registro detallado con validación de documentos (DNI, RUC para Perú).
+*   Historial de estancias y preferencias.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### 📊 Reportes y Estadísticas
+*   **Reporte General**: Resumen de reservas, ingresos y ocupación.
+*   **Reporte de Ingresos**: Detalle financiero por fechas y métodos de pago.
+*   **Reporte de Ocupación**: Análisis de ocupación diaria y habitaciones más solicitadas.
+*   **Reporte de Servicios**: Métricas de consumo de servicios adicionales.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🛠️ Tecnologías Utilizadas
 
-## Laravel Sponsors
+*   **Backend**: Laravel 12, PHP 8.2+
+*   **Base de Datos**: MySQL / MariaDB
+*   **Frontend**: Blade Templates, CSS3 (Diseño personalizado y responsivo)
+*   **Servidor**: Apache/Nginx (XAMPP compatible)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## ⚙️ Instalación y Configuración
 
-### Premium Partners
+Sigue estos pasos para desplegar el proyecto en tu entorno local:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+1.  **Clonar el repositorio**
+    ```bash
+    git clone <url-del-repositorio>
+    cd hotel_systemax
+    ```
 
-## Contributing
+2.  **Instalar dependencias de PHP**
+    ```bash
+    composer install
+    ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+3.  **Configurar entorno**
+    *   Duplica el archivo `.env.example` y renómbralo a `.env`.
+    *   Configura tus credenciales de base de datos en el archivo `.env`:
+        ```env
+        DB_CONNECTION=mysql
+        DB_HOST=127.0.0.1
+        DB_PORT=3306
+        DB_DATABASE=hotel_systemax
+        DB_USERNAME=root
+        DB_PASSWORD=
+        ```
 
-## Code of Conduct
+4.  **Generar clave de aplicación**
+    ```bash
+    php artisan key:generate
+    ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+5.  **Ejecutar migraciones y seeders**
+    Esto creará las tablas y los usuarios por defecto.
+    ```bash
+    php artisan migrate --seed
+    ```
+    *Nota: Si necesitas reiniciar la base de datos, usa `php artisan migrate:fresh --seed`.*
 
-## Security Vulnerabilities
+6.  **Iniciar el servidor local**
+    ```bash
+    php artisan serve
+    ```
+    Accede a: `http://127.0.0.1:8000`
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 🔑 Credenciales de Acceso (Demo)
 
-## License
+El sistema viene con usuarios preconfigurados para pruebas:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+| Rol | Email | Contraseña |
+| :--- | :--- | :--- |
+| **Gerente** | `gerente@hotel.com` | `password` |
+| **Recepción** | `recepcion@hotel.com` | `password` |
+
+## 📂 Estructura de Módulos
+
+*   **App\Models**: Modelos Eloquent (Reserva, Habitacion, Cliente, Pago, etc.).
+*   **App\Http\Controllers**: Lógica de negocio (ReservaController, ReportesController, etc.).
+*   **App\Http\Requests**: Validaciones de formularios (StoreReservaRequest, etc.).
+*   **resources/views**: Vistas Blade organizadas por módulo.
+*   **database/migrations**: Estructura de la base de datos.
+
+## 📝 Notas Adicionales
+
+*   El sistema incluye validaciones específicas para documentos de identidad peruanos (DNI 8 dígitos, RUC 11 dígitos).
+*   Los reportes utilizan gráficos y tablas para una mejor visualización de datos.
+*   El sistema maneja estados de sesión y protección CSRF para seguridad.
+
+---
+Desarrollado para Hotel Systemax.

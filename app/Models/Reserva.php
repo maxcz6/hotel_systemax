@@ -17,7 +17,9 @@ class Reserva extends Model
         'fecha_entrada',
         'fecha_salida',
         'total_precio',
+        'descuento',
         'estado',
+        'notas',
     ];
 
     public function cliente()

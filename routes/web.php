@@ -32,7 +32,9 @@ Route::middleware('auth')->group(function () {
         ]);
         
         // Habitaciones - CRUD completo solo para gerente
-        Route::resource('habitaciones', HabitacionController::class)->except(['destroy']);
+        Route::resource('habitaciones', HabitacionController::class)->parameters([
+            'habitaciones' => 'habitacion'
+        ]);
         
         // Reportes
         Route::get('/reportes', [ReportesController::class, 'index'])->name('reportes.index');
@@ -51,7 +53,7 @@ Route::middleware('auth')->group(function () {
         
         // Habitaciones - Solo ver, NO crear/editar
         Route::get('/habitaciones', [HabitacionController::class, 'index'])->name('habitaciones.index');
-        Route::get('/habitaciones/{habitacione}', [HabitacionController::class, 'show'])->name('habitaciones.show');
+        Route::get('/habitaciones/{habitacion}', [HabitacionController::class, 'show'])->name('habitaciones.show');
         
         Route::resource('reservas', ReservaController::class);
         
