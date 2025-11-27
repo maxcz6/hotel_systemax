@@ -1,31 +1,30 @@
 <x-app-layout>
     <div class="container">
-        <div class="page-header">
+        <div class="flex justify-between items-center mb-4">
             <h1>Habitaciones</h1>
-            @if(Auth::user()->role === 'gerente')
-                <a href="{{ route('habitaciones.create') }}" class="btn btn-primary">Nueva Habitación</a>
+            @if(in_array(Auth::user()->role, ['administrador', 'gerente']))
+                <a href="{{ route('habitaciones.create') }}" class="btn btn-primary">+ Nueva Habitación</a>
             @endif
         </div>
 
         @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+            <div class="alert alert-success">{{ session('success') }}</div>
         @endif
-
         @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
+            <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
 
         <div class="card">
-            <div class="card-body">
+            <div style="overflow-x: auto;">
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Número</th>
+                            <th>#</th>
                             <th>Tipo</th>
-                            <th>Precio por Noche</th>
+                            <th>Precio/Noche</th>
                             <th>Estado</th>
                             <th>Piso</th>
-                            <th>Acciones</th>
+                            <th style="text-align: right;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -35,22 +34,23 @@
                             <td>{{ $habitacion->tipoHabitacion->nombre }}</td>
                             <td>${{ number_format($habitacion->precio_por_noche, 2) }}</td>
                             <td>
-                                @if($habitacion->estado === 'disponible')
-                                    <span style="color: #059669; font-weight: 600;">✓ Disponible</span>
-                                @elseif($habitacion->estado === 'ocupada')
-                                    <span style="color: #dc2626; font-weight: 600;">● Ocupada</span>
-                                @elseif($habitacion->estado === 'limpieza')
-                                    <span style="color: #f59e0b; font-weight: 600;">◐ Limpieza</span>
-                                @else
-                                    <span style="color: #6b7280; font-weight: 600;">⚠ Mantenimiento</span>
-                                @endif
+                                @php
+                                    $estados = [
+                                        'disponible' => ['color' => '#10b981', 'texto' => '✓ Disponible'],
+                                        'ocupada' => ['color' => '#ef4444', 'texto' => '● Ocupada'],
+                                        'limpieza' => ['color' => '#f59e0b', 'texto' => '◐ Limpieza'],
+                                        'mantenimiento' => ['color' => '#6b7280', 'texto' => '⚠ Mantenimiento']
+                                    ];
+                                    $estado = $estados[$habitacion->estado] ?? ['color' => '#000', 'texto' => $habitacion->estado];
+                                @endphp
+                                <span style="color: {{ $estado['color'] }}; font-weight: 600;">{{ $estado['texto'] }}</span>
                             </td>
                             <td>{{ $habitacion->piso ?? 'N/A' }}</td>
-                            <td class="actions">
-                                <a href="{{ route('habitaciones.show', $habitacion) }}" class="btn btn-sm btn-secondary">Ver</a>
-                                @if(Auth::user()->role === 'gerente')
+                            <td style="text-align: right;">
+                                <a href="{{ route('habitaciones.show', $habitacion) }}" class="btn btn-sm btn-outline">Ver</a>
+                                @if(in_array(Auth::user()->role, ['administrador', 'gerente']))
                                     <a href="{{ route('habitaciones.edit', $habitacion) }}" class="btn btn-sm btn-primary">Editar</a>
-                                    <form action="{{ route('habitaciones.destroy', $habitacion) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Está seguro de eliminar la habitación #{{ $habitacion->numero }}?');">
+                                    <form action="{{ route('habitaciones.destroy', $habitacion) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Está seguro?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
@@ -60,16 +60,16 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center">No hay habitaciones registradas</td>
+                            <td colspan="6" class="text-center text-muted">No hay habitaciones registradas</td>
                         </tr>
                         @endforelse
                     </tbody>
                 </table>
-
-                <div class="pagination-wrapper">
-                    {{ $habitaciones->links() }}
-                </div>
             </div>
+        </div>
+
+        <div class="mt-4">
+            {{ $habitaciones->links() }}
         </div>
     </div>
 </x-app-layout>

@@ -10,7 +10,7 @@ use App\Http\Requests\UpdateHabitacionRequest;
 class HabitacionController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Muestra un listado del recurso.
      */
     public function index()
     {
@@ -19,23 +19,33 @@ class HabitacionController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Muestra el formulario para crear un nuevo recurso.
      */
     public function create()
     {
+        // Solo administradores y gerentes pueden crear habitaciones
+        if (!in_array(auth()->user()->role, ['administrador', 'gerente'])) {
+            abort(403, 'No tiene permisos para crear habitaciones.');
+        }
+        
         $tipoHabitaciones = TipoHabitacion::all();
         return view('habitaciones.create', compact('tipoHabitaciones'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Almacena un recurso recién creado en el almacenamiento.
      */
     public function store(StoreHabitacionRequest $request)
     {
+        // Solo administradores y gerentes pueden crear habitaciones
+        if (!in_array(auth()->user()->role, ['administrador', 'gerente'])) {
+            abort(403, 'No tiene permisos para crear habitaciones.');
+        }
+        
         $data = $request->validated();
         
-        // Si el gerente seleccionó crear un nuevo tipo de habitación
-        if ($request->tipo_habitacion_id === 'nuevo' && auth()->user()->role === 'gerente') {
+        // Si el gerente o administrador seleccionó crear un nuevo tipo de habitación
+        if ($request->tipo_habitacion_id === 'nuevo' && in_array(auth()->user()->role, ['administrador', 'gerente'])) {
             // Validar los campos del nuevo tipo
             $request->validate([
                 'nuevo_tipo_nombre' => 'required|string|max:100',
@@ -61,7 +71,7 @@ class HabitacionController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Muestra el recurso especificado.
      */
     public function show(Habitacion $habitacion)
     {
@@ -69,28 +79,43 @@ class HabitacionController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Muestra el formulario para editar el recurso especificado.
      */
     public function edit(Habitacion $habitacion)
     {
+        // Solo administradores y gerentes pueden editar habitaciones
+        if (!in_array(auth()->user()->role, ['administrador', 'gerente'])) {
+            abort(403, 'No tiene permisos para editar habitaciones.');
+        }
+        
         $tipoHabitaciones = TipoHabitacion::all();
         return view('habitaciones.edit', compact('habitacion', 'tipoHabitaciones'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Actualiza el recurso especificado en el almacenamiento.
      */
     public function update(UpdateHabitacionRequest $request, Habitacion $habitacion)
     {
+        // Solo administradores y gerentes pueden actualizar habitaciones
+        if (!in_array(auth()->user()->role, ['administrador', 'gerente'])) {
+            abort(403, 'No tiene permisos para actualizar habitaciones.');
+        }
+        
         $habitacion->update($request->validated());
         return redirect()->route('habitaciones.index')->with('success', 'Habitación actualizada con éxito.');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Elimina el recurso especificado del almacenamiento.
      */
     public function destroy(Habitacion $habitacion)
     {
+        // Solo administradores y gerentes pueden eliminar habitaciones
+        if (!in_array(auth()->user()->role, ['administrador', 'gerente'])) {
+            abort(403, 'No tiene permisos para eliminar habitaciones.');
+        }
+        
         try {
             // Verificar si tiene reservas asociadas
             $reservasCount = $habitacion->reservas()->count();

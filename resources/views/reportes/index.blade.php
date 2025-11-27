@@ -7,7 +7,7 @@
         <div class="dashboard-grid">
             <div class="card">
                 <div class="card-body">
-                    <h3>📊 Reporte General</h3>
+                    <h3>Reporte General</h3>
                     <p>Vista completa de reservas y estadísticas</p>
                     <a href="{{ route('reportes.general') }}" class="btn btn-primary">Ver Reporte</a>
                 </div>
@@ -15,7 +15,7 @@
 
             <div class="card">
                 <div class="card-body">
-                    <h3>💰 Ingresos</h3>
+                    <h3>Ingresos</h3>
                     <p>Análisis de ingresos por período</p>
                     <a href="{{ route('reportes.ingresos') }}" class="btn btn-primary">Ver Reporte</a>
                 </div>
@@ -23,7 +23,7 @@
 
             <div class="card">
                 <div class="card-body">
-                    <h3>🏨 Ocupación</h3>
+                    <h3>Ocupación</h3>
                     <p>Estadísticas de ocupación de habitaciones</p>
                     <a href="{{ route('reportes.ocupacion') }}" class="btn btn-primary">Ver Reporte</a>
                 </div>

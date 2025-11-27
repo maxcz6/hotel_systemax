@@ -1,30 +1,32 @@
 <nav>
     <div class="container">
         <div class="nav-content">
-            <div style="display: flex; align-items: center;">
-                <a href="{{ route('dashboard') }}" class="brand">{{ __('Hotel Systemax') }}</a>
+            <div class="flex items-center">
+                <a href="{{ route('dashboard') }}" class="brand">Hotel Systemax</a>
                 <ul>
-                    <li><a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a></li>
+                    <li><a href="{{ route('dashboard') }}">Panel</a></li>
                     
                     @if(in_array(Auth::user()->role, ['recepcion', 'gerente', 'administrador']))
-                        <li><a href="{{ route('clientes.index') }}">{{ __('Clients') }}</a></li>
-                        <li><a href="{{ route('habitaciones.index') }}">{{ __('Rooms') }}</a></li>
-                        <li><a href="{{ route('reservas.index') }}">{{ __('Reservations') }}</a></li>
-                        <li><a href="{{ route('pagos.index') }}">{{ __('Payments') }}</a></li>
+                        <li><a href="{{ route('clientes.index') }}">Clientes</a></li>
+                        <li><a href="{{ route('habitaciones.index') }}">Habitaciones</a></li>
+                        <li><a href="{{ route('reservas.index') }}">Reservas</a></li>
+                        <li><a href="{{ route('pagos.index') }}">Pagos</a></li>
                     @endif
                     
                     @if(in_array(Auth::user()->role, ['gerente', 'administrador']))
-                        <li><a href="{{ route('tipo_habitaciones.index') }}">{{ __('Room Types') }}</a></li>
-                        <li><a href="{{ route('servicios.index') }}">{{ __('Services') }}</a></li>
-                        <li><a href="{{ route('reportes.index') }}">{{ __('Reports') }}</a></li>
+                        <li><a href="{{ route('tipo_habitaciones.index') }}">Tipos</a></li>
+                        <li><a href="{{ route('servicios.index') }}">Servicios</a></li>
+                        <li><a href="{{ route('mantenimientos.index') }}">Mantenimiento</a></li>
+                        <li><a href="{{ route('limpieza.habitaciones') }}">Limpieza</a></li>
+                        <li><a href="{{ route('reportes.index') }}">Reportes</a></li>
                     @endif
 
                     @if(Auth::user()->role === 'limpieza')
-                        <li><a href="{{ route('limpieza.habitaciones') }}">{{ __('Rooms') }}</a></li>
+                        <li><a href="{{ route('limpieza.habitaciones') }}">Habitaciones</a></li>
                     @endif
 
                     @if(Auth::user()->role === 'mantenimiento')
-                        <li><a href="{{ route('mantenimiento.habitaciones') }}">{{ __('Rooms') }}</a></li>
+                        <li><a href="{{ route('mantenimiento.habitaciones') }}">Tareas</a></li>
                     @endif
                 </ul>
             </div>
@@ -35,8 +37,8 @@
                     <a href="{{ route('logout') }}"
                             onclick="event.preventDefault();
                                         this.closest('form').submit();"
-                            style="margin-left: 10px; color: #ef4444;">
-                        ({{ __('Log Out') }})
+                            style="color: #ef4444;">
+                        Salir
                     </a>
                 </form>
             </div>

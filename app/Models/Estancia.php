@@ -30,6 +30,6 @@ class Estancia extends Model
 
     public function serviciosDetalle()
     {
-        return $this->hasMany(ServicioDetalle::class, 'reserva_id', 'reserva_id');
+        return $this->hasMany(ServicioDetalle::class, 'id_estancia', 'id');
     }
 }

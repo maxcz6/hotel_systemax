@@ -10,11 +10,39 @@ class PagoController extends Controller
 {
     public function index()
     {
-        $pagos = Pago::with(['reserva.cliente'])
+        $pagos = Pago::with(['reserva.cliente', 'reserva.estancia.serviciosDetalle'])
             ->orderBy('fecha_pago', 'desc')
             ->paginate(15);
         
+        // Calcular información adicional para cada pago
+        foreach ($pagos as $pago) {
+            $pago->total_reserva = $this->calcularTotalReserva($pago->reserva);
+            $pago->total_pagado = $this->calcularTotalPagado($pago->reserva);
+            $pago->saldo_pendiente = $pago->total_reserva - $pago->total_pagado;
+        }
+        
         return view('pagos.index', compact('pagos'));
+    }
+
+    private function calcularTotalReserva($reserva)
+    {
+        $totalHabitacion = $reserva->total_precio ?? 0;
+        $serviciosTotal = 0;
+        
+        if ($reserva->estancia) {
+            $serviciosTotal = $reserva->estancia->serviciosDetalle
+                ->where('estado', '!=', 'anulado')
+                ->sum('subtotal');
+        }
+        
+        return $totalHabitacion + $serviciosTotal;
+    }
+
+    private function calcularTotalPagado($reserva)
+    {
+        return $reserva->pagos()
+            ->where('estado', 'completado')
+            ->sum('monto') ?? 0;
     }
 
     public function create(Request $request)
@@ -23,11 +51,11 @@ class PagoController extends Controller
         
         // Si viene desde reserva, cargar datos de la reserva
         if ($reserva_id) {
-            $reserva = Reserva::with(['pagos', 'estancia.serviciosDetalle'])->findOrFail($reserva_id);
+            $reserva = Reserva::with(['pagos', 'estancia.serviciosDetalle', 'cliente', 'habitacion'])->findOrFail($reserva_id);
             
-            // Calculate pending amount
+            // Calcular monto pendiente
             $totalPagado = $reserva->pagos->where('estado', 'completado')->sum('monto');
-            $serviciosTotal = $reserva->estancia ? $reserva->estancia->serviciosDetalle->sum('total') : 0;
+            $serviciosTotal = $reserva->estancia ? $reserva->estancia->serviciosDetalle->where('estado', '!=', 'anulado')->sum('subtotal') : 0;
             $totalGeneral = $reserva->total_precio + $serviciosTotal;
             $saldoPendiente = $totalGeneral - $totalPagado;
             
@@ -60,10 +88,10 @@ class PagoController extends Controller
             'usuario_id' => auth()->id(),
         ]);
 
-        // Update reservation status if fully paid
+        // Actualizar estado de reserva si está totalmente pagada
         $reserva = Reserva::with(['pagos', 'estancia.serviciosDetalle'])->find($validated['reserva_id']);
         $totalPagado = $reserva->pagos->where('estado', 'completado')->sum('monto');
-        $serviciosTotal = $reserva->estancia ? $reserva->estancia->serviciosDetalle->sum('total') : 0;
+        $serviciosTotal = $reserva->estancia ? $reserva->estancia->serviciosDetalle->where('estado', '!=', 'anulado')->sum('subtotal') : 0;
         $totalGeneral = $reserva->total_precio + $serviciosTotal;
         
         if ($totalPagado >= $totalGeneral && !in_array($reserva->estado, ['completada', 'checkout'])) {
@@ -77,7 +105,7 @@ class PagoController extends Controller
 
     public function show(Pago $pago)
     {
-        $pago->load(['reserva.cliente']);
+        $pago->load(['reserva.cliente', 'reserva.habitacion.tipoHabitacion', 'reserva.estancia.serviciosDetalle', 'usuario']);
         return view('pagos.show', compact('pago'));
     }
 
@@ -125,7 +153,7 @@ class PagoController extends Controller
     {
         $reserva_id = $pago->reserva_id;
         
-        // Mark as anulado instead of deleting
+        // Marcar como anulado en lugar de eliminar
         $pago->update([
             'estado' => 'anulado',
             'anulado_por' => auth()->id(),

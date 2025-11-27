@@ -2,23 +2,23 @@
     <form method="POST" action="{{ route('register') }}">
         @csrf
 
-        <!-- Name -->
+        <!-- Nombre -->
         <div class="form-group">
-            <x-input-label for="name" :value="__('Name')" />
+            <x-input-label for="name" value="Nombre" />
             <x-text-input id="name" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
-        <!-- Email Address -->
+        <!-- Correo Electrónico -->
         <div class="form-group">
-            <x-input-label for="email" :value="__('Email')" />
+            <x-input-label for="email" value="Correo Electrónico" />
             <x-text-input id="email" type="email" name="email" :value="old('email')" required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <!-- Password -->
+        <!-- Contraseña -->
         <div class="form-group">
-            <x-input-label for="password" :value="__('Password')" />
+            <x-input-label for="password" value="Contraseña" />
 
             <x-text-input id="password"
                             type="password"
@@ -28,9 +28,9 @@
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
-        <!-- Confirm Password -->
+        <!-- Confirmar Contraseña -->
         <div class="form-group">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
+            <x-input-label for="password_confirmation" value="Confirmar Contraseña" />
 
             <x-text-input id="password_confirmation"
                             type="password"
@@ -41,11 +41,11 @@
 
         <div class="flex items-center flex-end mt-4">
             <a class="underline text-sm text-gray-600 hover:text-gray-900" href="{{ route('login') }}" style="margin-right: 1rem;">
-                {{ __('Already registered?') }}
+                ¿Ya estás registrado?
             </a>
 
             <x-primary-button>
-                {{ __('Register') }}
+                Registrarse
             </x-primary-button>
         </div>
     </form>

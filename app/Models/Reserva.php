@@ -54,7 +54,7 @@ class Reserva extends Model
 
     public function estancia()
     {
-        return $this->hasOne(Estancia::class);
+        return $this->hasOne(Estancia::class, 'reserva_id');
     }
 
     public function servicioDetalles()
@@ -71,5 +71,10 @@ class Reserva extends Model
     {
         return $this->belongsToMany(Servicio::class, 'servicio_detalles')
                     ->withPivot('cantidad', 'precio_unitario', 'total');
+    }
+
+    public function salida()
+    {
+        return $this->hasOne(Salida::class);
     }
 }

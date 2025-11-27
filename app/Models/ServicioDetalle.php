@@ -12,20 +12,29 @@ class ServicioDetalle extends Model
     protected $table = 'servicio_detalles';
 
     protected $fillable = [
-        'reserva_id',
-        'servicio_id',
+        'id_estancia',
+        'id_servicio',
         'cantidad',
         'precio_unitario',
-        'total',
+        'subtotal',
+        'estado',
+        'anulado_por',
+        'fecha_anulacion',
+        'motivo_anulacion',
     ];
 
-    public function reserva()
+    public function estancia()
     {
-        return $this->belongsTo(Reserva::class);
+        return $this->belongsTo(Estancia::class, 'id_estancia');
     }
 
     public function servicio()
     {
-        return $this->belongsTo(Servicio::class);
+        return $this->belongsTo(Servicio::class, 'id_servicio');
+    }
+
+    public function anuladoPor()
+    {
+        return $this->belongsTo(User::class, 'anulado_por');
     }
 }

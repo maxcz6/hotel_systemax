@@ -1,11 +1,11 @@
 <section>
     <header>
         <h2 style="font-size: 1.125rem; font-weight: 500; color: #111827;">
-            {{ __('Update Password') }}
+            Actualizar Contraseña
         </h2>
 
         <p style="margin-top: 0.25rem; font-size: 0.875rem; color: #4b5563;">
-            {{ __('Ensure your account is using a long, random password to stay secure.') }}
+            Asegúrate de que tu cuenta esté usando una contraseña larga y aleatoria para mantenerla segura.
         </p>
     </header>
 
@@ -14,28 +14,28 @@
         @method('put')
 
         <div class="form-group">
-            <x-input-label for="update_password_current_password" :value="__('Current Password')" />
+            <x-input-label for="update_password_current_password" value="Contraseña Actual" />
             <x-text-input id="update_password_current_password" name="current_password" type="password" autocomplete="current-password" />
             <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-2" />
         </div>
 
         <div class="form-group">
-            <x-input-label for="update_password_password" :value="__('New Password')" />
+            <x-input-label for="update_password_password" value="Nueva Contraseña" />
             <x-text-input id="update_password_password" name="password" type="password" autocomplete="new-password" />
             <x-input-error :messages="$errors->updatePassword->get('password')" class="mt-2" />
         </div>
 
         <div class="form-group">
-            <x-input-label for="update_password_password_confirmation" :value="__('Confirm Password')" />
+            <x-input-label for="update_password_password_confirmation" value="Confirmar Contraseña" />
             <x-text-input id="update_password_password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" />
             <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-2" />
         </div>
 
         <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+            <x-primary-button>Guardar</x-primary-button>
 
             @if (session('status') === 'password-updated')
-                <p id="password-status" class="text-sm text-gray-600">{{ __('Saved.') }}</p>
+                <p id="password-status" class="text-sm text-gray-600">Guardado.</p>
                 <script>
                     setTimeout(() => {
                         const status = document.getElementById('password-status');
