@@ -25,6 +25,13 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Routes for Administrador (full access)
+    Route::middleware('role:administrador')->group(function () {
+        // Administrador tiene acceso completo a pagos (edit/update/delete)
+        Route::get('/pagos/{pago}/edit', [PagoController::class, 'edit'])->name('pagos.edit');
+        Route::put('/pagos/{pago}', [PagoController::class, 'update'])->name('pagos.update');
+    });
+
     // Routes for Gerente
     Route::middleware('role:gerente')->group(function () {
         Route::resource('tipo_habitaciones', TipoHabitacionController::class)->parameters([
@@ -66,7 +73,7 @@ Route::middleware('auth')->group(function () {
         // Servicios Detalle
         Route::resource('servicio_detalle', ServicioDetalleController::class)->except(['show']);
         
-        // Pagos
+        // Pagos (recepcion puede ver, crear, mostrar, eliminar - NO editar)
         Route::get('/pagos', [PagoController::class, 'index'])->name('pagos.index');
         Route::get('/pagos/create', [PagoController::class, 'create'])->name('pagos.create');
         Route::post('/pagos', [PagoController::class, 'store'])->name('pagos.store');

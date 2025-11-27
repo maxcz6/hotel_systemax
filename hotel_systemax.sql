@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 26-11-2025 a las 17:29:22
+-- Tiempo de generación: 26-11-2025 a las 23:35:19
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -20,6 +20,146 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `hotel_systemax`
 --
+
+DELIMITER $$
+--
+-- Procedimientos
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_habitaciones_disponibles` (IN `p_fecha_entrada` DATE, IN `p_fecha_salida` DATE, IN `p_tipo_habitacion_id` BIGINT)   BEGIN
+  SELECT h.*
+  FROM habitaciones h
+  WHERE h.estado = 'disponible'
+    AND (p_tipo_habitacion_id IS NULL OR h.tipo_habitacion_id = p_tipo_habitacion_id)
+    AND h.id NOT IN (
+      SELECT habitacion_id
+      FROM reservas
+      WHERE estado IN ('confirmada', 'checkin', 'pendiente')
+        AND (
+          (p_fecha_entrada BETWEEN fecha_entrada AND fecha_salida) OR
+          (p_fecha_salida BETWEEN fecha_entrada AND fecha_salida) OR
+          (fecha_entrada BETWEEN p_fecha_entrada AND p_fecha_salida)
+        )
+    );
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_realizar_checkin` (IN `p_reserva_id` BIGINT, IN `p_usuario_id` BIGINT)   BEGIN
+  DECLARE v_habitacion_id BIGINT;
+  
+  START TRANSACTION;
+  
+  -- Actualizar estado de reserva
+  UPDATE reservas
+  SET estado = 'checkin'
+  WHERE id = p_reserva_id;
+  
+  -- Obtener habitación
+  SELECT habitacion_id INTO v_habitacion_id
+  FROM reservas
+  WHERE id = p_reserva_id;
+  
+  -- Actualizar estado de habitación
+  UPDATE habitaciones
+  SET estado = 'ocupada'
+  WHERE id = v_habitacion_id;
+  
+  -- Crear estancia
+  INSERT INTO estancias (reserva_id, check_in_real, estado)
+  VALUES (p_reserva_id, NOW(), 'activa');
+  
+  COMMIT;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_realizar_checkout` (IN `p_reserva_id` BIGINT, IN `p_usuario_id` BIGINT)   BEGIN
+  DECLARE v_habitacion_id BIGINT;
+  
+  START TRANSACTION;
+  
+  -- Actualizar estado de reserva
+  UPDATE reservas
+  SET estado = 'completada'
+  WHERE id = p_reserva_id;
+  
+  -- Actualizar estancia
+  UPDATE estancias
+  SET check_out_real = NOW(), estado = 'finalizada'
+  WHERE reserva_id = p_reserva_id;
+  
+  -- Obtener habitación
+  SELECT habitacion_id INTO v_habitacion_id
+  FROM reservas
+  WHERE id = p_reserva_id;
+  
+  -- Actualizar estado de habitación
+  UPDATE habitaciones
+  SET estado = 'limpieza'
+  WHERE id = v_habitacion_id;
+  
+  COMMIT;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_reporte_ingresos` (IN `p_fecha_inicio` DATE, IN `p_fecha_fin` DATE)   BEGIN
+  SELECT 
+    DATE(p.fecha_pago) as fecha,
+    COUNT(*) as total_pagos,
+    SUM(p.monto) as total_ingresos,
+    p.metodo_pago,
+    AVG(p.monto) as promedio_pago
+  FROM pagos p
+  WHERE p.estado = 'completado'
+    AND DATE(p.fecha_pago) BETWEEN p_fecha_inicio AND p_fecha_fin
+  GROUP BY DATE(p.fecha_pago), p.metodo_pago
+  ORDER BY fecha DESC;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_reporte_ocupacion` (IN `p_fecha_inicio` DATE, IN `p_fecha_fin` DATE)   BEGIN
+  SELECT 
+    DATE(r.fecha_entrada) as fecha,
+    COUNT(DISTINCT r.habitacion_id) as habitaciones_ocupadas,
+    (SELECT COUNT(*) FROM habitaciones WHERE estado != 'mantenimiento') as total_habitaciones,
+    ROUND((COUNT(DISTINCT r.habitacion_id) * 100.0 / 
+      (SELECT COUNT(*) FROM habitaciones WHERE estado != 'mantenimiento')), 2) as porcentaje_ocupacion
+  FROM reservas r
+  WHERE r.estado IN ('confirmada', 'checkin')
+    AND r.fecha_entrada <= p_fecha_fin
+    AND r.fecha_salida >= p_fecha_inicio
+  GROUP BY DATE(r.fecha_entrada)
+  ORDER BY fecha;
+END$$
+
+--
+-- Funciones
+--
+CREATE DEFINER=`root`@`localhost` FUNCTION `fn_tiene_permiso` (`p_role` VARCHAR(50), `p_permiso` VARCHAR(100)) RETURNS TINYINT(1) DETERMINISTIC READS SQL DATA BEGIN
+  DECLARE tiene_permiso BOOLEAN DEFAULT FALSE;
+  
+  SELECT COUNT(*) > 0 INTO tiene_permiso
+  FROM permisos
+  WHERE nombre = p_permiso
+    AND FIND_IN_SET(p_role, REPLACE(roles_permitidos, ',', ',')) > 0;
+  
+  RETURN tiene_permiso;
+END$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `auditoria`
+--
+
+CREATE TABLE `auditoria` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `tabla` varchar(50) NOT NULL,
+  `operacion` enum('INSERT','UPDATE','DELETE') NOT NULL,
+  `registro_id` bigint(20) UNSIGNED NOT NULL,
+  `datos_anteriores` longtext DEFAULT NULL,
+  `datos_nuevos` longtext DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -78,6 +218,24 @@ CREATE TABLE `clientes` (
 INSERT INTO `clientes` (`id`, `nombre`, `apellido`, `dni`, `email`, `telefono`, `direccion`, `created_at`, `updated_at`) VALUES
 (4, 'max', 'paucar', '70707070', 'maxjpr8@gmail.com', '999999999', 'hghrtbbgehbv', '2025-11-26 21:03:17', '2025-11-26 21:03:17');
 
+--
+-- Disparadores `clientes`
+--
+DELIMITER $$
+CREATE TRIGGER `trg_auditoria_clientes_delete` BEFORE DELETE ON `clientes` FOR EACH ROW BEGIN
+  INSERT INTO auditoria (tabla, operacion, registro_id, datos_anteriores)
+  VALUES ('clientes', 'DELETE', OLD.id, JSON_OBJECT(
+    'nombre', OLD.nombre,
+    'apellido', OLD.apellido,
+    'dni', OLD.dni,
+    'email', OLD.email,
+    'telefono', OLD.telefono,
+    'direccion', OLD.direccion
+  ));
+END
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -93,6 +251,32 @@ CREATE TABLE `estancias` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Disparadores `estancias`
+--
+DELIMITER $$
+CREATE TRIGGER `trg_estancia_checkin` AFTER INSERT ON `estancias` FOR EACH ROW BEGIN
+  IF NEW.check_in_real IS NOT NULL THEN
+    UPDATE habitaciones h
+    INNER JOIN reservas r ON h.id = r.habitacion_id
+    SET h.estado = 'ocupada'
+    WHERE r.id = NEW.reserva_id;
+  END IF;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `trg_estancia_checkout` AFTER UPDATE ON `estancias` FOR EACH ROW BEGIN
+  IF OLD.check_out_real IS NULL AND NEW.check_out_real IS NOT NULL THEN
+    UPDATE habitaciones h
+    INNER JOIN reservas r ON h.id = r.habitacion_id
+    SET h.estado = 'limpieza'
+    WHERE r.id = NEW.reserva_id;
+  END IF;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -132,6 +316,35 @@ CREATE TABLE `habitaciones` (
 
 INSERT INTO `habitaciones` (`id`, `numero`, `tipo_habitacion_id`, `precio_por_noche`, `estado`, `created_at`, `updated_at`) VALUES
 (2, '5', 2, 50.11, 'disponible', '2025-11-26 20:48:41', '2025-11-26 20:55:13');
+
+--
+-- Disparadores `habitaciones`
+--
+DELIMITER $$
+CREATE TRIGGER `trg_habitacion_cambio_estado` AFTER UPDATE ON `habitaciones` FOR EACH ROW BEGIN
+  IF OLD.estado != NEW.estado THEN
+    INSERT INTO historial_estados_habitacion (habitacion_id, estado_anterior, estado_nuevo)
+    VALUES (NEW.id, OLD.estado, NEW.estado);
+  END IF;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `historial_estados_habitacion`
+--
+
+CREATE TABLE `historial_estados_habitacion` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `habitacion_id` bigint(20) UNSIGNED NOT NULL,
+  `estado_anterior` varchar(50) DEFAULT NULL,
+  `estado_nuevo` varchar(50) NOT NULL,
+  `usuario_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `observaciones` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -217,8 +430,28 @@ CREATE TABLE `pagos` (
   `comprobante` varchar(255) DEFAULT NULL,
   `fecha_pago` datetime NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `estado` enum('pendiente','completado','anulado') NOT NULL DEFAULT 'completado',
+  `usuario_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `numero_transaccion` varchar(100) DEFAULT NULL,
+  `anulado_por` bigint(20) UNSIGNED DEFAULT NULL,
+  `fecha_anulacion` datetime DEFAULT NULL,
+  `motivo_anulacion` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Disparadores `pagos`
+--
+DELIMITER $$
+CREATE TRIGGER `trg_auditoria_pagos_update` AFTER UPDATE ON `pagos` FOR EACH ROW BEGIN
+  INSERT INTO auditoria (tabla, operacion, registro_id, datos_anteriores, datos_nuevos)
+  VALUES ('pagos', 'UPDATE', NEW.id, 
+    JSON_OBJECT('monto', OLD.monto, 'estado', OLD.estado),
+    JSON_OBJECT('monto', NEW.monto, 'estado', NEW.estado)
+  );
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -235,12 +468,64 @@ CREATE TABLE `password_reset_tokens` (
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `permisos`
+--
+
+CREATE TABLE `permisos` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `modulo` varchar(50) NOT NULL,
+  `descripcion` text DEFAULT NULL,
+  `roles_permitidos` varchar(255) NOT NULL COMMENT 'Roles separados por coma: administrador,gerente,recepcion',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `permisos`
+--
+
+INSERT INTO `permisos` (`id`, `nombre`, `modulo`, `descripcion`, `roles_permitidos`, `created_at`, `updated_at`) VALUES
+(1, 'habitaciones.ver', 'habitaciones', 'Ver listado de habitaciones', 'administrador,gerente,recepcion,limpieza,mantenimiento', NULL, NULL),
+(2, 'habitaciones.crear', 'habitaciones', 'Crear nuevas habitaciones', 'administrador,gerente', NULL, NULL),
+(3, 'habitaciones.editar', 'habitaciones', 'Editar habitaciones existentes', 'administrador,gerente', NULL, NULL),
+(4, 'habitaciones.eliminar', 'habitaciones', 'Eliminar habitaciones', 'administrador', NULL, NULL),
+(5, 'habitaciones.cambiar_estado', 'habitaciones', 'Cambiar estado de habitaciones', 'administrador,gerente,recepcion,limpieza,mantenimiento', NULL, NULL),
+(6, 'reservas.ver', 'reservas', 'Ver reservas', 'administrador,gerente,recepcion', NULL, NULL),
+(7, 'reservas.crear', 'reservas', 'Crear reservas', 'administrador,gerente,recepcion', NULL, NULL),
+(8, 'reservas.editar', 'reservas', 'Editar reservas', 'administrador,gerente,recepcion', NULL, NULL),
+(9, 'reservas.cancelar', 'reservas', 'Cancelar reservas', 'administrador,gerente', NULL, NULL),
+(10, 'reservas.checkin', 'reservas', 'Realizar check-in', 'administrador,gerente,recepcion', NULL, NULL),
+(11, 'reservas.checkout', 'reservas', 'Realizar check-out', 'administrador,gerente,recepcion', NULL, NULL),
+(12, 'clientes.ver', 'clientes', 'Ver clientes', 'administrador,gerente,recepcion', NULL, NULL),
+(13, 'clientes.crear', 'clientes', 'Crear clientes', 'administrador,gerente,recepcion', NULL, NULL),
+(14, 'clientes.editar', 'clientes', 'Editar clientes', 'administrador,gerente,recepcion', NULL, NULL),
+(15, 'clientes.eliminar', 'clientes', 'Eliminar clientes', 'administrador', NULL, NULL),
+(16, 'pagos.ver', 'pagos', 'Ver pagos', 'administrador,gerente,recepcion', NULL, NULL),
+(17, 'pagos.registrar', 'pagos', 'Registrar pagos', 'administrador,gerente,recepcion', NULL, NULL),
+(18, 'pagos.anular', 'pagos', 'Anular pagos', 'administrador,gerente', NULL, NULL),
+(19, 'reportes.ocupacion', 'reportes', 'Ver reporte de ocupación', 'administrador,gerente', NULL, NULL),
+(20, 'reportes.ingresos', 'reportes', 'Ver reporte de ingresos', 'administrador,gerente', NULL, NULL),
+(21, 'reportes.clientes', 'reportes', 'Ver reporte de clientes', 'administrador,gerente', NULL, NULL),
+(22, 'usuarios.ver', 'usuarios', 'Ver usuarios', 'administrador', NULL, NULL),
+(23, 'usuarios.crear', 'usuarios', 'Crear usuarios', 'administrador', NULL, NULL),
+(24, 'usuarios.editar', 'usuarios', 'Editar usuarios', 'administrador', NULL, NULL),
+(25, 'usuarios.eliminar', 'usuarios', 'Eliminar usuarios', 'administrador', NULL, NULL),
+(26, 'servicios.ver', 'servicios', 'Ver servicios', 'administrador,gerente,recepcion', NULL, NULL),
+(27, 'servicios.crear', 'servicios', 'Crear servicios', 'administrador,gerente', NULL, NULL),
+(28, 'servicios.editar', 'servicios', 'Editar servicios', 'administrador,gerente', NULL, NULL),
+(29, 'servicios.eliminar', 'servicios', 'Eliminar servicios', 'administrador', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `reservas`
 --
 
 CREATE TABLE `reservas` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `cliente_id` bigint(20) UNSIGNED NOT NULL,
+  `usuario_id` bigint(20) UNSIGNED DEFAULT NULL,
   `habitacion_id` bigint(20) UNSIGNED NOT NULL,
   `fecha_entrada` date NOT NULL,
   `fecha_salida` date NOT NULL,
@@ -249,15 +534,60 @@ CREATE TABLE `reservas` (
   `estado` varchar(50) NOT NULL DEFAULT 'pendiente',
   `notas` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `num_adultos` int(11) DEFAULT 2,
+  `num_ninos` int(11) DEFAULT 0,
+  `origen_reserva` enum('web','telefono','presencial','agencia') DEFAULT 'presencial',
+  `cancelado_por` bigint(20) UNSIGNED DEFAULT NULL,
+  `fecha_cancelacion` datetime DEFAULT NULL,
+  `motivo_cancelacion` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `reservas`
 --
 
-INSERT INTO `reservas` (`id`, `cliente_id`, `habitacion_id`, `fecha_entrada`, `fecha_salida`, `total_precio`, `descuento`, `estado`, `notas`, `created_at`, `updated_at`) VALUES
-(3, 4, 2, '2025-11-26', '2025-11-28', -100.22, 0.00, 'checkin', NULL, '2025-11-26 21:03:38', '2025-11-26 21:14:28');
+INSERT INTO `reservas` (`id`, `cliente_id`, `usuario_id`, `habitacion_id`, `fecha_entrada`, `fecha_salida`, `total_precio`, `descuento`, `estado`, `notas`, `created_at`, `updated_at`, `num_adultos`, `num_ninos`, `origen_reserva`, `cancelado_por`, `fecha_cancelacion`, `motivo_cancelacion`) VALUES
+(3, 4, NULL, 2, '2025-11-26', '2025-11-28', -100.22, 0.00, 'checkin', NULL, '2025-11-26 21:03:38', '2025-11-26 21:14:28', 2, 0, 'presencial', NULL, NULL, NULL);
+
+--
+-- Disparadores `reservas`
+--
+DELIMITER $$
+CREATE TRIGGER `trg_calcular_precio_reserva` BEFORE INSERT ON `reservas` FOR EACH ROW BEGIN
+  DECLARE precio_noche DECIMAL(10,2);
+  DECLARE num_noches INT;
+  
+  SELECT precio_por_noche INTO precio_noche
+  FROM habitaciones
+  WHERE id = NEW.habitacion_id;
+  
+  SET num_noches = DATEDIFF(NEW.fecha_salida, NEW.fecha_entrada);
+  SET NEW.total_precio = (precio_noche * num_noches) - NEW.descuento;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `trg_validar_disponibilidad` BEFORE INSERT ON `reservas` FOR EACH ROW BEGIN
+  DECLARE reservas_conflicto INT;
+  
+  SELECT COUNT(*) INTO reservas_conflicto
+  FROM reservas
+  WHERE habitacion_id = NEW.habitacion_id
+    AND estado IN ('confirmada', 'checkin', 'pendiente')
+    AND (
+      (NEW.fecha_entrada BETWEEN fecha_entrada AND fecha_salida) OR
+      (NEW.fecha_salida BETWEEN fecha_entrada AND fecha_salida) OR
+      (fecha_entrada BETWEEN NEW.fecha_entrada AND NEW.fecha_salida)
+    );
+  
+  IF reservas_conflicto > 0 THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'La habitación no está disponible en las fechas seleccionadas';
+  END IF;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -323,6 +653,32 @@ INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, 
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `tarifas_especiales`
+--
+
+CREATE TABLE `tarifas_especiales` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `tipo_habitacion_id` bigint(20) UNSIGNED NOT NULL,
+  `fecha_inicio` date NOT NULL,
+  `fecha_fin` date NOT NULL,
+  `precio_por_noche` decimal(10,2) NOT NULL,
+  `motivo` varchar(255) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `tarifas_especiales`
+--
+
+INSERT INTO `tarifas_especiales` (`id`, `tipo_habitacion_id`, `fecha_inicio`, `fecha_fin`, `precio_por_noche`, `motivo`, `activo`, `created_at`, `updated_at`) VALUES
+(1, 1, '2025-12-20', '2026-01-05', 150.00, 'Temporada Navideña', 1, NULL, NULL),
+(2, 2, '2025-12-20', '2026-01-05', 100.00, 'Temporada Navideña', 1, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `tipo_habitaciones`
 --
 
@@ -355,7 +711,11 @@ CREATE TABLE `users` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `name` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `role` varchar(255) NOT NULL DEFAULT 'recepcion',
+  `role` enum('administrador','gerente','recepcion','limpieza','mantenimiento') NOT NULL DEFAULT 'recepcion',
+  `telefono` varchar(20) DEFAULT NULL,
+  `avatar` varchar(255) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `ultimo_acceso` timestamp NULL DEFAULT NULL,
   `email_verified_at` timestamp NULL DEFAULT NULL,
   `password` varchar(255) NOT NULL,
   `remember_token` varchar(100) DEFAULT NULL,
@@ -367,13 +727,146 @@ CREATE TABLE `users` (
 -- Volcado de datos para la tabla `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `role`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'Gerente', 'gerente@hotel.com', 'gerente', NULL, '$2y$12$hmOZQgn3.tyErOScYMP7EO4iM67Ss6aQPGhX7f91LG39AKinP6fH.', NULL, '2025-11-26 21:26:22', '2025-11-26 21:26:22'),
-(2, 'Recepcion', 'recepcion@hotel.com', 'recepcion', NULL, '$2y$12$zJtFoAv/1Xw.D.P.601bu.chNJl9pfzTcVFG6R4Yo8FCAGX5oeFCu', NULL, '2025-11-26 21:26:23', '2025-11-26 21:26:23');
+INSERT INTO `users` (`id`, `name`, `email`, `role`, `telefono`, `avatar`, `activo`, `ultimo_acceso`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
+(1, 'Gerente', 'gerente@hotel.com', 'administrador', NULL, NULL, 1, NULL, NULL, '$2y$12$hmOZQgn3.tyErOScYMP7EO4iM67Ss6aQPGhX7f91LG39AKinP6fH.', NULL, '2025-11-26 21:26:22', '2025-11-26 21:26:22'),
+(2, 'Recepcion', 'recepcion@hotel.com', 'recepcion', NULL, NULL, 1, NULL, NULL, '$2y$12$zJtFoAv/1Xw.D.P.601bu.chNJl9pfzTcVFG6R4Yo8FCAGX5oeFCu', NULL, '2025-11-26 21:26:23', '2025-11-26 21:26:23');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `v_dashboard_ocupacion`
+-- (Véase abajo para la vista actual)
+--
+CREATE TABLE `v_dashboard_ocupacion` (
+`habitaciones_ocupadas` bigint(21)
+,`habitaciones_disponibles` bigint(21)
+,`habitaciones_mantenimiento` bigint(21)
+,`habitaciones_limpieza` bigint(21)
+,`checkins_hoy` bigint(21)
+,`llegadas_hoy` bigint(21)
+,`salidas_hoy` bigint(21)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `v_habitaciones_completa`
+-- (Véase abajo para la vista actual)
+--
+CREATE TABLE `v_habitaciones_completa` (
+`id` bigint(20) unsigned
+,`numero` varchar(255)
+,`precio_por_noche` decimal(8,2)
+,`estado` enum('disponible','ocupada','mantenimiento','limpieza')
+,`tipo_habitacion` varchar(255)
+,`capacidad` int(11)
+,`tipo_descripcion` text
+);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `v_ingresos_mes_actual`
+-- (Véase abajo para la vista actual)
+--
+CREATE TABLE `v_ingresos_mes_actual` (
+`total_mes` decimal(32,2)
+,`num_pagos` bigint(21)
+,`promedio_pago` decimal(14,6)
+,`metodo_pago` varchar(255)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `v_reservas_activas`
+-- (Véase abajo para la vista actual)
+--
+CREATE TABLE `v_reservas_activas` (
+`id` bigint(20) unsigned
+,`fecha_entrada` date
+,`fecha_salida` date
+,`total_precio` decimal(10,2)
+,`estado` varchar(50)
+,`cliente_nombre` varchar(511)
+,`cliente_telefono` varchar(255)
+,`cliente_email` varchar(255)
+,`habitacion_numero` varchar(255)
+,`tipo_habitacion` varchar(255)
+,`num_noches` int(7)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `v_roles_permisos`
+-- (Véase abajo para la vista actual)
+--
+CREATE TABLE `v_roles_permisos` (
+`rol` varchar(13)
+,`permiso` varchar(100)
+,`modulo` varchar(50)
+,`descripcion` mediumtext
+);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura para la vista `v_dashboard_ocupacion`
+--
+DROP TABLE IF EXISTS `v_dashboard_ocupacion`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_dashboard_ocupacion`  AS SELECT (select count(0) from `habitaciones` where `habitaciones`.`estado` = 'ocupada') AS `habitaciones_ocupadas`, (select count(0) from `habitaciones` where `habitaciones`.`estado` = 'disponible') AS `habitaciones_disponibles`, (select count(0) from `habitaciones` where `habitaciones`.`estado` = 'mantenimiento') AS `habitaciones_mantenimiento`, (select count(0) from `habitaciones` where `habitaciones`.`estado` = 'limpieza') AS `habitaciones_limpieza`, (select count(0) from `reservas` where `reservas`.`estado` = 'checkin') AS `checkins_hoy`, (select count(0) from `reservas` where `reservas`.`fecha_entrada` = curdate()) AS `llegadas_hoy`, (select count(0) from `reservas` where `reservas`.`fecha_salida` = curdate()) AS `salidas_hoy` ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura para la vista `v_habitaciones_completa`
+--
+DROP TABLE IF EXISTS `v_habitaciones_completa`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_habitaciones_completa`  AS SELECT `h`.`id` AS `id`, `h`.`numero` AS `numero`, `h`.`precio_por_noche` AS `precio_por_noche`, `h`.`estado` AS `estado`, `th`.`nombre` AS `tipo_habitacion`, `th`.`capacidad` AS `capacidad`, `th`.`descripcion` AS `tipo_descripcion` FROM (`habitaciones` `h` join `tipo_habitaciones` `th` on(`h`.`tipo_habitacion_id` = `th`.`id`)) ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura para la vista `v_ingresos_mes_actual`
+--
+DROP TABLE IF EXISTS `v_ingresos_mes_actual`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_ingresos_mes_actual`  AS SELECT sum(`pagos`.`monto`) AS `total_mes`, count(0) AS `num_pagos`, avg(`pagos`.`monto`) AS `promedio_pago`, `pagos`.`metodo_pago` AS `metodo_pago` FROM `pagos` WHERE month(`pagos`.`fecha_pago`) = month(curdate()) AND year(`pagos`.`fecha_pago`) = year(curdate()) AND `pagos`.`estado` = 'completado' GROUP BY `pagos`.`metodo_pago` ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura para la vista `v_reservas_activas`
+--
+DROP TABLE IF EXISTS `v_reservas_activas`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_reservas_activas`  AS SELECT `r`.`id` AS `id`, `r`.`fecha_entrada` AS `fecha_entrada`, `r`.`fecha_salida` AS `fecha_salida`, `r`.`total_precio` AS `total_precio`, `r`.`estado` AS `estado`, concat(`c`.`nombre`,' ',`c`.`apellido`) AS `cliente_nombre`, `c`.`telefono` AS `cliente_telefono`, `c`.`email` AS `cliente_email`, `h`.`numero` AS `habitacion_numero`, `th`.`nombre` AS `tipo_habitacion`, to_days(`r`.`fecha_salida`) - to_days(`r`.`fecha_entrada`) AS `num_noches` FROM (((`reservas` `r` join `clientes` `c` on(`r`.`cliente_id` = `c`.`id`)) join `habitaciones` `h` on(`r`.`habitacion_id` = `h`.`id`)) join `tipo_habitaciones` `th` on(`h`.`tipo_habitacion_id` = `th`.`id`)) WHERE `r`.`estado` in ('confirmada','checkin','pendiente') ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura para la vista `v_roles_permisos`
+--
+DROP TABLE IF EXISTS `v_roles_permisos`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_roles_permisos`  AS SELECT DISTINCT 'administrador' AS `rol`, `p`.`nombre` AS `permiso`, `p`.`modulo` AS `modulo`, `p`.`descripcion` AS `descripcion` FROM `permisos` AS `p` WHERE find_in_set('administrador',`p`.`roles_permitidos`) > 0union allselect distinct 'gerente' AS `rol`,`p`.`nombre` AS `permiso`,`p`.`modulo` AS `modulo`,`p`.`descripcion` AS `descripcion` from `permisos` `p` where find_in_set('gerente',`p`.`roles_permitidos`) > 0 union all select distinct 'recepcion' AS `rol`,`p`.`nombre` AS `permiso`,`p`.`modulo` AS `modulo`,`p`.`descripcion` AS `descripcion` from `permisos` `p` where find_in_set('recepcion',`p`.`roles_permitidos`) > 0 union all select distinct 'limpieza' AS `rol`,`p`.`nombre` AS `permiso`,`p`.`modulo` AS `modulo`,`p`.`descripcion` AS `descripcion` from `permisos` `p` where find_in_set('limpieza',`p`.`roles_permitidos`) > 0 union all select distinct 'mantenimiento' AS `rol`,`p`.`nombre` AS `permiso`,`p`.`modulo` AS `modulo`,`p`.`descripcion` AS `descripcion` from `permisos` `p` where find_in_set('mantenimiento',`p`.`roles_permitidos`) > 0  ;
 
 --
 -- Índices para tablas volcadas
 --
+
+--
+-- Indices de la tabla `auditoria`
+--
+ALTER TABLE `auditoria`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `auditoria_user_id_foreign` (`user_id`),
+  ADD KEY `idx_auditoria_tabla_registro` (`tabla`,`registro_id`),
+  ADD KEY `idx_auditoria_fecha` (`created_at`),
+  ADD KEY `idx_auditoria_user_fecha` (`user_id`,`created_at`);
 
 --
 -- Indices de la tabla `cache`
@@ -401,7 +894,8 @@ ALTER TABLE `clientes`
 --
 ALTER TABLE `estancias`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `estancias_reserva_id_unique` (`reserva_id`);
+  ADD UNIQUE KEY `estancias_reserva_id_unique` (`reserva_id`),
+  ADD KEY `idx_estancias_estado` (`estado`);
 
 --
 -- Indices de la tabla `failed_jobs`
@@ -418,6 +912,15 @@ ALTER TABLE `habitaciones`
   ADD UNIQUE KEY `habitaciones_numero_unique` (`numero`),
   ADD KEY `habitaciones_tipo_habitacion_id_foreign` (`tipo_habitacion_id`),
   ADD KEY `idx_habitaciones_estado` (`estado`);
+
+--
+-- Indices de la tabla `historial_estados_habitacion`
+--
+ALTER TABLE `historial_estados_habitacion`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `historial_habitacion_id_foreign` (`habitacion_id`),
+  ADD KEY `historial_usuario_id_foreign` (`usuario_id`),
+  ADD KEY `idx_historial_fecha` (`created_at`);
 
 --
 -- Indices de la tabla `jobs`
@@ -444,13 +947,23 @@ ALTER TABLE `migrations`
 ALTER TABLE `pagos`
   ADD PRIMARY KEY (`id`),
   ADD KEY `pagos_reserva_id_foreign` (`reserva_id`),
-  ADD KEY `idx_pagos_fecha` (`fecha_pago`);
+  ADD KEY `idx_pagos_fecha` (`fecha_pago`),
+  ADD KEY `pagos_usuario_id_foreign` (`usuario_id`),
+  ADD KEY `idx_pagos_estado` (`estado`),
+  ADD KEY `idx_pagos_usuario` (`usuario_id`);
 
 --
 -- Indices de la tabla `password_reset_tokens`
 --
 ALTER TABLE `password_reset_tokens`
   ADD PRIMARY KEY (`email`);
+
+--
+-- Indices de la tabla `permisos`
+--
+ALTER TABLE `permisos`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `permisos_nombre_unique` (`nombre`);
 
 --
 -- Indices de la tabla `reservas`
@@ -460,14 +973,17 @@ ALTER TABLE `reservas`
   ADD KEY `reservas_cliente_id_foreign` (`cliente_id`),
   ADD KEY `reservas_habitacion_id_foreign` (`habitacion_id`),
   ADD KEY `idx_reservas_estado` (`estado`),
-  ADD KEY `idx_reservas_fechas` (`fecha_entrada`,`fecha_salida`);
+  ADD KEY `idx_reservas_fechas` (`fecha_entrada`,`fecha_salida`),
+  ADD KEY `reservas_usuario_id_foreign` (`usuario_id`),
+  ADD KEY `idx_reservas_usuario` (`usuario_id`);
 
 --
 -- Indices de la tabla `servicios`
 --
 ALTER TABLE `servicios`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `servicios_nombre_unique` (`nombre`);
+  ADD UNIQUE KEY `servicios_nombre_unique` (`nombre`),
+  ADD KEY `idx_servicios_precio` (`precio`);
 
 --
 -- Indices de la tabla `servicio_detalles`
@@ -486,6 +1002,14 @@ ALTER TABLE `sessions`
   ADD KEY `sessions_last_activity_index` (`last_activity`);
 
 --
+-- Indices de la tabla `tarifas_especiales`
+--
+ALTER TABLE `tarifas_especiales`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `tarifas_tipo_habitacion_id_foreign` (`tipo_habitacion_id`),
+  ADD KEY `idx_tarifas_fechas` (`fecha_inicio`,`fecha_fin`);
+
+--
 -- Indices de la tabla `tipo_habitaciones`
 --
 ALTER TABLE `tipo_habitaciones`
@@ -497,11 +1021,18 @@ ALTER TABLE `tipo_habitaciones`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `users_email_unique` (`email`);
+  ADD UNIQUE KEY `users_email_unique` (`email`),
+  ADD KEY `idx_users_role` (`role`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
 --
+
+--
+-- AUTO_INCREMENT de la tabla `auditoria`
+--
+ALTER TABLE `auditoria`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `clientes`
@@ -528,6 +1059,12 @@ ALTER TABLE `habitaciones`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT de la tabla `historial_estados_habitacion`
+--
+ALTER TABLE `historial_estados_habitacion`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `jobs`
 --
 ALTER TABLE `jobs`
@@ -546,6 +1083,12 @@ ALTER TABLE `pagos`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de la tabla `permisos`
+--
+ALTER TABLE `permisos`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+
+--
 -- AUTO_INCREMENT de la tabla `reservas`
 --
 ALTER TABLE `reservas`
@@ -562,6 +1105,12 @@ ALTER TABLE `servicios`
 --
 ALTER TABLE `servicio_detalles`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `tarifas_especiales`
+--
+ALTER TABLE `tarifas_especiales`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `tipo_habitaciones`
@@ -592,6 +1141,13 @@ ALTER TABLE `habitaciones`
   ADD CONSTRAINT `habitaciones_tipo_habitacion_id_foreign` FOREIGN KEY (`tipo_habitacion_id`) REFERENCES `tipo_habitaciones` (`id`);
 
 --
+-- Filtros para la tabla `historial_estados_habitacion`
+--
+ALTER TABLE `historial_estados_habitacion`
+  ADD CONSTRAINT `historial_habitacion_id_foreign` FOREIGN KEY (`habitacion_id`) REFERENCES `habitaciones` (`id`),
+  ADD CONSTRAINT `historial_usuario_id_foreign` FOREIGN KEY (`usuario_id`) REFERENCES `users` (`id`);
+
+--
 -- Filtros para la tabla `pagos`
 --
 ALTER TABLE `pagos`
@@ -610,6 +1166,31 @@ ALTER TABLE `reservas`
 ALTER TABLE `servicio_detalles`
   ADD CONSTRAINT `servicio_detalles_reserva_id_foreign` FOREIGN KEY (`reserva_id`) REFERENCES `reservas` (`id`),
   ADD CONSTRAINT `servicio_detalles_servicio_id_foreign` FOREIGN KEY (`servicio_id`) REFERENCES `servicios` (`id`);
+
+--
+-- Filtros para la tabla `tarifas_especiales`
+--
+ALTER TABLE `tarifas_especiales`
+  ADD CONSTRAINT `tarifas_tipo_habitacion_id_foreign` FOREIGN KEY (`tipo_habitacion_id`) REFERENCES `tipo_habitaciones` (`id`);
+
+DELIMITER $$
+--
+-- Eventos
+--
+CREATE DEFINER=`root`@`localhost` EVENT `evt_actualizar_reservas_vencidas` ON SCHEDULE EVERY 1 DAY STARTS '2025-11-26 17:34:54' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
+  UPDATE reservas
+  SET estado = 'cancelada', 
+      motivo_cancelacion = 'Reserva vencida automáticamente'
+  WHERE estado = 'pendiente'
+    AND fecha_entrada < CURDATE();
+END$$
+
+CREATE DEFINER=`root`@`localhost` EVENT `evt_limpiar_auditoria` ON SCHEDULE EVERY 1 MONTH STARTS '2025-11-26 17:34:54' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
+  DELETE FROM auditoria
+  WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 YEAR);
+END$$
+
+DELIMITER ;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

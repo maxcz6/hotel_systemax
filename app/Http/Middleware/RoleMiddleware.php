@@ -23,8 +23,8 @@ class RoleMiddleware
 
         $userRole = Auth::user()->role;
 
-        // Gerente has access to everything
-        if ($userRole === 'gerente') {
+        // Administrador and Gerente have access to everything
+        if (in_array($userRole, ['administrador', 'gerente'])) {
             return $next($request);
         }
 

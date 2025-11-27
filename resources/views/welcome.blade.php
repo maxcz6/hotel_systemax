@@ -10,17 +10,17 @@
         <div class="guest-layout">
             <div class="guest-card" style="text-align: center;">
                 <h1 style="font-size: 2rem; margin-bottom: 1rem;">Hotel Systemax</h1>
-                <p style="margin-bottom: 2rem; color: #4b5563;">Welcome to our Hotel Management System.</p>
+                <p style="margin-bottom: 2rem; color: #4b5563;">Bienvenido a nuestro Sistema de Gestión Hotelera.</p>
                 
                 @if (Route::has('login'))
                     <div class="flex justify-center gap-4">
                         @auth
-                            <a href="{{ url('/dashboard') }}" class="btn">Dashboard</a>
+                            <a href="{{ url('/dashboard') }}" class="btn">Panel de Control</a>
                         @else
-                            <a href="{{ route('login') }}" class="btn">Log in</a>
+                            <a href="{{ route('login') }}" class="btn">Iniciar Sesión</a>
 
                             @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="btn" style="background-color: white; color: #1f2937; border: 1px solid #d1d5db;">Register</a>
+                                <a href="{{ route('register') }}" class="btn" style="background-color: white; color: #1f2937; border: 1px solid #d1d5db;">Registrarse</a>
                             @endif
                         @endauth
                     </div>

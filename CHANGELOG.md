@@ -1,126 +1,116 @@
-# Release Notes
+# 🔄 Changelog & Updates - November 26, 2025
 
-## [Unreleased](https://github.com/laravel/laravel/compare/v12.10.0...12.x)
+## ✅ System Fixes and Improvements
 
-## [v12.10.0](https://github.com/laravel/laravel/compare/v12.9.1...v12.10.0) - 2025-11-04
+### 🎯 **Navigation Menu Fix for Administrador Role**
 
-* Add background driver by [@barryvdh](https://github.com/barryvdh) in https://github.com/laravel/laravel/pull/6699
+**Problem**: Users with `administrador` role could not see navigation menu items.
 
-## [v12.9.1](https://github.com/laravel/laravel/compare/v12.9.0...v12.9.1) - 2025-10-23
+**Root Cause**: The navigation was only checking for `gerente` and `recepcion` roles, but the database uses `administrador` as the highest privilege role.
 
-* [12.x] Replace Bootcamp with Laravel Learn by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6692
-* [12.x] Comment out CLI workers for fresh applications by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/laravel/pull/6693
+**Solution**: 
+- Updated `resources/views/layouts/navigation.blade.php` to support `administrador` role
+- Updated `app/Http/Middleware/RoleMiddleware.php` to grant `administrador` full system access
+- Both `administrador` and `gerente` now have identical permissions (full access)
 
-## [v12.9.0](https://github.com/laravel/laravel/compare/v12.8.0...v12.9.0) - 2025-10-21
+**Files Modified**:
+- `resources/views/layouts/navigation.blade.php`
+- `app/Http/Middleware/RoleMiddleware.php`
 
-**Full Changelog**: https://github.com/laravel/laravel/compare/v12.8.0...v12.9.0
+---
 
-## [v12.8.0](https://github.com/laravel/laravel/compare/v12.7.1...v12.8.0) - 2025-10-20
+### 💳 **Payment System Overhaul**
 
-* [12.x] Makes test suite using broadcast's `null` driver by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/laravel/pull/6691
+**Problem**: Payment controller and views were using outdated column names from previous database schema.
 
-## [v12.7.1](https://github.com/laravel/laravel/compare/v12.7.0...v12.7.1) - 2025-10-15
+**Database Schema Changes**:
+- `id_reserva` →`reserva_id`
+- `fecha` → `fecha_pago`
+- `referencia` → `numero_transaccion` + `comprobante`
+- Added `estado` (pendiente | completado | anulado)
+- Added `usuario_id` to track which user registered the payment
+- Added `anulado_por`, `fecha_anulacion`, `motivo_anulacion` for soft deletion
 
-* Added `failover` driver to the `queue` config comment.  by [@sajjadhossainshohag](https://github.com/sajjadhossainshohag) in https://github.com/laravel/laravel/pull/6688
+**Solution**:
 
-## [v12.7.0](https://github.com/laravel/laravel/compare/v12.6.0...v12.7.0) - 2025-10-14
+#### 1. Updated Pago Model (`app/Models/Pago.php`)
+- Added all new fields to `$fillable` array
+- Added date casts for `fecha_pago` and `fecha_anulacion`
+- Supports payment status tracking (pendiente, completado, anulado)
 
-**Full Changelog**: https://github.com/laravel/laravel/compare/v12.6.0...v12.7.0
+#### 2. Updated PagoController (`app/Http/Controllers/PagoController.php`)
+- Fixed column names throughout (reserva_id, fecha_pago, etc.)
+- Added `usuario_id` tracking (records which user created the payment)
+- Changed `destroy()` method to soft-delete (marks as `anulado` instead of deleting)
+- Added proper payment status filtering when calculating totals
+- Fixed total calculation to use `total_precio` instead of `precio_total`
+- Fixed servicio total calculation to use `total` instead of `subtotal`
 
-## [v12.6.0](https://github.com/laravel/laravel/compare/v12.5.0...v12.6.0) - 2025-10-02
+#### 3. Updated Payment Create View (`resources/views/pagos/create.blade.php`)
+- Changed `id_reserva` to `reserva_id` in hidden input
+- Replaced `referencia` field with two fields:
+  - `numero_transaccion` - Transaction/reference number
+  - `comprobante` - Receipt/voucher code
+- Added `max` validation on amount input to prevent overpayment
 
-* Fix setup script by [@goldmont](https://github.com/goldmont) in https://github.com/laravel/laravel/pull/6682
+#### 4. Updated Payment Index View (`resources/views/pagos/index.blade.php`)
+- Fixed column references (reserva_id, fecha_pago)
+- Added "Estado" column showing payment status with color-coded badges
+- Changed "Referencia" column to "N° Transacción"
+- Fixed table colspan for empty state
 
-## [v12.5.0](https://github.com/laravel/laravel/compare/v12.4.0...v12.5.0) - 2025-09-30
+**Files Modified**:
+- `app/Models/Pago.php`
+- `app/Http/Controllers/PagoController.php`
+- `resources/views/pagos/create.blade.php`
+- `resources/views/pagos/index.blade.php`
 
-* [12.x] Fix type casting for environment variables in config files by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6670
-* Fix CVEs affecting vite by [@faissaloux](https://github.com/faissaloux) in https://github.com/laravel/laravel/pull/6672
-* Update .editorconfig to target compose.yaml by [@fredikaputra](https://github.com/fredikaputra) in https://github.com/laravel/laravel/pull/6679
-* Add pre-package-uninstall script to composer.json by [@cosmastech](https://github.com/cosmastech) in https://github.com/laravel/laravel/pull/6681
+---
 
-## [v12.4.0](https://github.com/laravel/laravel/compare/v12.3.1...v12.4.0) - 2025-08-29
+### 📊 **Reserva Model Enhancement**
 
-* [12.x] Add default Redis retry configuration by [@mateusjatenee](https://github.com/mateusjatenee) in https://github.com/laravel/laravel/pull/6666
+**Problem**: Reserva model was missing many fields from the database schema.
 
-## [v12.3.1](https://github.com/laravel/laravel/compare/v12.3.0...v12.3.1) - 2025-08-21
+**Solution**: Added all missing fields and relationships
 
-* [12.x] Bump Pint version by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6653
-* [12.x] Making sure all related processed are closed when terminating the currently command by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6654
-* [12.x] Use application name from configuration by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6655
-* Bring back postAutoloadDump script by [@jasonvarga](https://github.com/jasonvarga) in https://github.com/laravel/laravel/pull/6662
+**New Fillable Fields**:
+- `usuario_id` - User who created the reservation
+- `num_adultos` - Number of adults
+- `num_ninos` - Number of children
+- `origen_reserva` - Source (web, telefono, presencial, agencia)
+- `cancelado_por` - User who cancelled (if cancelled)
+- `fecha_cancelacion` - Cancellation date
+- `motivo_cancelacion` - Cancellation reason
 
-## [v12.3.0](https://github.com/laravel/laravel/compare/v12.2.0...v12.3.0) - 2025-08-03
+**New Relationships**:
+- `usuario()` - BelongsTo relationship with User model
 
-* Fix Critical Security Vulnerability in form-data Dependency by [@izzygld](https://github.com/izzygld) in https://github.com/laravel/laravel/pull/6645
-* Revert "fix" by [@RobertBoes](https://github.com/RobertBoes) in https://github.com/laravel/laravel/pull/6646
-* Change composer post-autoload-dump script to Artisan command by [@lmjhs](https://github.com/lmjhs) in https://github.com/laravel/laravel/pull/6647
+**New Casts**:
+- `fecha_entrada` → date
+- `fecha_salida` → date
+- `fecha_cancelacion` → datetime
+- `total_precio` → decimal:2
+- `descuento` → decimal:2
 
-## [v12.2.0](https://github.com/laravel/laravel/compare/v12.1.0...v12.2.0) - 2025-07-11
+**Files Modified**:
+- `app/Models/Reserva.php`
 
-* Add Vite 7 support by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/laravel/pull/6639
+---
 
-## [v12.1.0](https://github.com/laravel/laravel/compare/v12.0.11...v12.1.0) - 2025-07-03
+## 📝 Database Schema Summary
 
-* [12.x] Disable nightwatch in testing by [@laserhybiz](https://github.com/laserhybiz) in https://github.com/laravel/laravel/pull/6632
-* [12.x] Reorder environment variables in phpunit.xml for logical grouping by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6634
-* Change to hyphenate prefixes and cookie names by [@u01jmg3](https://github.com/u01jmg3) in https://github.com/laravel/laravel/pull/6636
-* [12.x] Fix type casting for environment variables in config files by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6637
+### User Roles (ENUM values):
+- `administrador` - Full system access (equivalent to gerente)
+- `gerente` - Full system access
+- `recepcion` - Daily operations (clients, rooms, reservations, payments)
+- `limpieza` - Room cleaning status
+- `mantenimiento` - Room maintenance
 
-## [v12.0.11](https://github.com/laravel/laravel/compare/v12.0.10...v12.0.11) - 2025-06-10
+### Payment States (ENUM values):
+- `pendiente` - Payment pending
+- `completado` - Payment completed
+- `anulado` - Payment voided/cancelled
 
-**Full Changelog**: https://github.com/laravel/laravel/compare/v12.0.10...v12.0.11
+---
 
-## [v12.0.10](https://github.com/laravel/laravel/compare/v12.0.9...v12.0.10) - 2025-06-09
-
-* fix alphabetical order by [@Khuthaily](https://github.com/Khuthaily) in https://github.com/laravel/laravel/pull/6627
-* [12.x] Reduce redundancy and keeps the .gitignore file cleaner by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6629
-* [12.x] Fix: Add void return type to satisfy Rector analysis by [@Aluisio-Pires](https://github.com/Aluisio-Pires) in https://github.com/laravel/laravel/pull/6628
-
-## [v12.0.9](https://github.com/laravel/laravel/compare/v12.0.8...v12.0.9) - 2025-05-26
-
-* [12.x] Remove apc by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6611
-* [12.x] Add JSON Schema to package.json by [@martinbean](https://github.com/martinbean) in https://github.com/laravel/laravel/pull/6613
-* Minor language update by [@woganmay](https://github.com/woganmay) in https://github.com/laravel/laravel/pull/6615
-* Enhance .gitignore to exclude common OS and log files by [@mohammadRezaei1380](https://github.com/mohammadRezaei1380) in https://github.com/laravel/laravel/pull/6619
-
-## [v12.0.8](https://github.com/laravel/laravel/compare/v12.0.7...v12.0.8) - 2025-05-12
-
-* [12.x] Clean up URL formatting in README by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6601
-
-## [v12.0.7](https://github.com/laravel/laravel/compare/v12.0.6...v12.0.7) - 2025-04-15
-
-* Add `composer run test` command by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/laravel/pull/6598
-* Partner Directory Changes in ReadME by [@joshcirre](https://github.com/joshcirre) in https://github.com/laravel/laravel/pull/6599
-
-## [v12.0.6](https://github.com/laravel/laravel/compare/v12.0.5...v12.0.6) - 2025-04-08
-
-**Full Changelog**: https://github.com/laravel/laravel/compare/v12.0.5...v12.0.6
-
-## [v12.0.5](https://github.com/laravel/laravel/compare/v12.0.4...v12.0.5) - 2025-04-02
-
-* [12.x] Update `config/mail.php` to match the latest core configuration by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6594
-
-## [v12.0.4](https://github.com/laravel/laravel/compare/v12.0.3...v12.0.4) - 2025-03-31
-
-* Bump vite from 6.0.11 to 6.2.3 - Vulnerability patch by [@abdel-aouby](https://github.com/abdel-aouby) in https://github.com/laravel/laravel/pull/6586
-* Bump vite from 6.2.3 to 6.2.4 by [@thinkverse](https://github.com/thinkverse) in https://github.com/laravel/laravel/pull/6590
-
-## [v12.0.3](https://github.com/laravel/laravel/compare/v12.0.2...v12.0.3) - 2025-03-17
-
-* Remove reverted change from CHANGELOG.md by [@AJenbo](https://github.com/AJenbo) in https://github.com/laravel/laravel/pull/6565
-* Improves clarity in app.css file by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6569
-* [12.x] Refactor: Structural improvement for clarity by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6574
-* Bump axios from 1.7.9 to 1.8.2 - Vulnerability patch by [@abdel-aouby](https://github.com/abdel-aouby) in https://github.com/laravel/laravel/pull/6572
-* [12.x] Remove Unnecessarily [@source](https://github.com/source) by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6584
-
-## [v12.0.2](https://github.com/laravel/laravel/compare/v12.0.1...v12.0.2) - 2025-03-04
-
-* Make the github test action run out of the box independent of the choice of testing framework by [@ndeblauw](https://github.com/ndeblauw) in https://github.com/laravel/laravel/pull/6555
-
-## [v12.0.1](https://github.com/laravel/laravel/compare/v12.0.0...v12.0.1) - 2025-02-24
-
-* [12.x] prefer stable stability by [@pataar](https://github.com/pataar) in https://github.com/laravel/laravel/pull/6548
-
-## [v12.0.0 (2025-??-??)](https://github.com/laravel/laravel/compare/v11.0.2...v12.0.0)
-
-Laravel 12 includes a variety of changes to the application skeleton. Please consult the diff to see what's new.
+**Last Updated**: November 26, 2025
