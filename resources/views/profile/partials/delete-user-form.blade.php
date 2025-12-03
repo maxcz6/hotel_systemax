@@ -1,16 +1,16 @@
 <section class="space-y-6">
     <header>
         <h2 style="font-size: 1.125rem; font-weight: 500; color: #111827;">
-            {{ __('Delete Account') }}
+            Eliminar Cuenta
         </h2>
 
         <p style="margin-top: 0.25rem; font-size: 0.875rem; color: #4b5563;">
-            {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.') }}
+            Una vez que tu cuenta sea eliminada, todos sus recursos y datos serán eliminados permanentemente. Antes de eliminar tu cuenta, descarga cualquier dato o información que desees conservar.
         </p>
     </header>
 
     <button type="button" class="btn btn-danger" onclick="document.getElementById('confirm-user-deletion-modal').style.display='block'">
-        {{ __('Delete Account') }}
+        Eliminar Cuenta
     </button>
 
     <div id="confirm-user-deletion-modal" class="modal" style="display: {{ $errors->userDeletion->isNotEmpty() ? 'block' : 'none' }};">
@@ -21,22 +21,22 @@
 
                 <div class="modal-header">
                     <h2 style="font-size: 1.125rem; font-weight: 500; color: #111827;">
-                        {{ __('Are you sure you want to delete your account?') }}
+                        ¿Estás seguro de que deseas eliminar tu cuenta?
                     </h2>
 
                     <p style="margin-top: 0.25rem; font-size: 0.875rem; color: #4b5563;">
-                        {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.') }}
+                        Una vez que tu cuenta sea eliminada, todos sus recursos y datos serán eliminados permanentemente. Por favor, ingresa tu contraseña para confirmar que deseas eliminar permanentemente tu cuenta.
                     </p>
                 </div>
 
                 <div class="form-group">
-                    <x-input-label for="password" value="{{ __('Password') }}" style="display: none;" />
+                    <x-input-label for="password" value="Contraseña" style="display: none;" />
 
                     <x-text-input
                         id="password"
                         name="password"
                         type="password"
-                        placeholder="{{ __('Password') }}"
+                        placeholder="Contraseña"
                     />
 
                     <x-input-error :messages="$errors->userDeletion->get('password')" class="mt-2" />
@@ -44,11 +44,11 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="document.getElementById('confirm-user-deletion-modal').style.display='none'">
-                        {{ __('Cancel') }}
+                        Cancelar
                     </button>
 
                     <button type="submit" class="btn btn-danger">
-                        {{ __('Delete Account') }}
+                        Eliminar Cuenta
                     </button>
                 </div>
             </form>

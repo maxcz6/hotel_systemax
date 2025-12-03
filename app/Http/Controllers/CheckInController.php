@@ -25,6 +25,11 @@ class CheckInController extends Controller
             return redirect()->back()->with('error', 'La reserva no está en estado válido para Check-in.');
         }
 
+        // Verificar si ya existe una estancia
+        if ($reserva->estancia) {
+            return redirect()->back()->with('error', 'Esta reserva ya tiene un check-in registrado.');
+        }
+
         // Crear Estancia
         Estancia::create([
             'reserva_id' => $reserva->id,
@@ -32,8 +37,8 @@ class CheckInController extends Controller
             'estado' => 'activa',
         ]);
 
-        // Actualizar Reserva
-        $reserva->update(['estado' => 'activa']);
+        // Actualizar Reserva a estado 'checkin'
+        $reserva->update(['estado' => 'checkin']);
 
         // Actualizar Habitación
         $habitacion = $reserva->habitacion;
@@ -41,6 +46,6 @@ class CheckInController extends Controller
             $habitacion->update(['estado' => 'ocupada']);
         }
 
-        return redirect()->route('reservas.index')->with('success', 'Check-in realizado con éxito.');
+        return redirect()->route('reservas.show', $reserva)->with('success', 'Check-in realizado con éxito.');
     }
 }

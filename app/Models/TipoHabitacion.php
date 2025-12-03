@@ -16,6 +16,7 @@ class TipoHabitacion extends Model
         'descripcion',
         'capacidad',
         'precio_por_noche',
+        'precio_base',
     ];
 
     public function habitaciones()

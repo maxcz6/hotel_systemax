@@ -4,7 +4,11 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
+<<<<<<< HEAD
 -- Tiempo de generación: 03-12-2025 a las 15:33:56
+=======
+-- Tiempo de generación: 26-11-2025 a las 23:35:19
+>>>>>>> 5f5533c681db70f39b43ae36faaa7d9bd5f87e31
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -672,6 +676,32 @@ INSERT INTO `tarifas_especiales` (`id`, `tipo_habitacion_id`, `fecha_inicio`, `f
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `tarifas_especiales`
+--
+
+CREATE TABLE `tarifas_especiales` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `tipo_habitacion_id` bigint(20) UNSIGNED NOT NULL,
+  `fecha_inicio` date NOT NULL,
+  `fecha_fin` date NOT NULL,
+  `precio_por_noche` decimal(10,2) NOT NULL,
+  `motivo` varchar(255) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `tarifas_especiales`
+--
+
+INSERT INTO `tarifas_especiales` (`id`, `tipo_habitacion_id`, `fecha_inicio`, `fecha_fin`, `precio_por_noche`, `motivo`, `activo`, `created_at`, `updated_at`) VALUES
+(1, 1, '2025-12-20', '2026-01-05', 150.00, 'Temporada Navideña', 1, NULL, NULL),
+(2, 2, '2025-12-20', '2026-01-05', 100.00, 'Temporada Navideña', 1, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `tipo_habitaciones`
 --
 
@@ -721,9 +751,14 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `role`, `telefono`, `avatar`, `activo`, `ultimo_acceso`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
+<<<<<<< HEAD
 (1, 'Gerente', 'gerente@hotel.com', 'administrador', NULL, NULL, 1, NULL, NULL, '$2y$12$bGKuLjrgrSNlVsHWznwg1eIsbhiNn0WeOxiIRBT4QY1Mh0GYWdsZq', NULL, '2025-11-26 21:26:22', '2025-11-26 21:26:22'),
 (2, 'Recepcion', 'recepcion@hotel.com', 'recepcion', NULL, NULL, 1, NULL, NULL, '$2y$12$bGKuLjrgrSNlVsHWznwg1eIsbhiNn0WeOxiIRBT4QY1Mh0GYWdsZq', NULL, '2025-11-26 21:26:23', '2025-11-26 21:26:23'),
 (3, 'maxxx', 'maxjpr7@gmail.com', 'administrador', NULL, NULL, 1, NULL, NULL, '$2y$12$bGKuLjrgrSNlVsHWznwg1eIsbhiNn0WeOxiIRBT4QY1Mh0GYWdsZq', NULL, '2025-12-03 19:23:40', '2025-12-03 19:23:40');
+=======
+(1, 'Gerente', 'gerente@hotel.com', 'administrador', NULL, NULL, 1, NULL, NULL, '$2y$12$hmOZQgn3.tyErOScYMP7EO4iM67Ss6aQPGhX7f91LG39AKinP6fH.', NULL, '2025-11-26 21:26:22', '2025-11-26 21:26:22'),
+(2, 'Recepcion', 'recepcion@hotel.com', 'recepcion', NULL, NULL, 1, NULL, NULL, '$2y$12$zJtFoAv/1Xw.D.P.601bu.chNJl9pfzTcVFG6R4Yo8FCAGX5oeFCu', NULL, '2025-11-26 21:26:23', '2025-11-26 21:26:23');
+>>>>>>> 5f5533c681db70f39b43ae36faaa7d9bd5f87e31
 
 -- --------------------------------------------------------
 
@@ -1171,7 +1206,11 @@ DELIMITER $$
 --
 -- Eventos
 --
+<<<<<<< HEAD
 CREATE DEFINER=`root`@`localhost` EVENT `evt_actualizar_reservas_vencidas` ON SCHEDULE EVERY 1 DAY STARTS '2025-12-03 09:22:19' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
+=======
+CREATE DEFINER=`root`@`localhost` EVENT `evt_actualizar_reservas_vencidas` ON SCHEDULE EVERY 1 DAY STARTS '2025-11-26 17:34:54' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
+>>>>>>> 5f5533c681db70f39b43ae36faaa7d9bd5f87e31
   UPDATE reservas
   SET estado = 'cancelada', 
       motivo_cancelacion = 'Reserva vencida automáticamente'
@@ -1179,7 +1218,11 @@ CREATE DEFINER=`root`@`localhost` EVENT `evt_actualizar_reservas_vencidas` ON SC
     AND fecha_entrada < CURDATE();
 END$$
 
+<<<<<<< HEAD
 CREATE DEFINER=`root`@`localhost` EVENT `evt_limpiar_auditoria` ON SCHEDULE EVERY 1 MONTH STARTS '2025-12-03 09:22:19' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
+=======
+CREATE DEFINER=`root`@`localhost` EVENT `evt_limpiar_auditoria` ON SCHEDULE EVERY 1 MONTH STARTS '2025-11-26 17:34:54' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
+>>>>>>> 5f5533c681db70f39b43ae36faaa7d9bd5f87e31
   DELETE FROM auditoria
   WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 YEAR);
 END$$

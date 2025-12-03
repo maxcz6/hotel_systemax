@@ -13,6 +13,7 @@ class Reserva extends Model
 
     protected $fillable = [
         'cliente_id',
+        'usuario_id',
         'habitacion_id',
         'fecha_entrada',
         'fecha_salida',
@@ -20,6 +21,20 @@ class Reserva extends Model
         'descuento',
         'estado',
         'notas',
+        'num_adultos',
+        'num_ninos',
+        'origen_reserva',
+        'cancelado_por',
+        'fecha_cancelacion',
+        'motivo_cancelacion',
+    ];
+
+    protected $casts = [
+        'fecha_entrada' => 'date',
+        'fecha_salida' => 'date',
+        'fecha_cancelacion' => 'datetime',
+        'total_precio' => 'decimal:2',
+        'descuento' => 'decimal:2',
     ];
 
     public function cliente()
@@ -32,9 +47,14 @@ class Reserva extends Model
         return $this->belongsTo(Habitacion::class);
     }
 
+    public function usuario()
+    {
+        return $this->belongsTo(User::class, 'usuario_id');
+    }
+
     public function estancia()
     {
-        return $this->hasOne(Estancia::class);
+        return $this->hasOne(Estancia::class, 'reserva_id');
     }
 
     public function servicioDetalles()
@@ -51,5 +71,10 @@ class Reserva extends Model
     {
         return $this->belongsToMany(Servicio::class, 'servicio_detalles')
                     ->withPivot('cantidad', 'precio_unitario', 'total');
+    }
+
+    public function salida()
+    {
+        return $this->hasOne(Salida::class);
     }
 }

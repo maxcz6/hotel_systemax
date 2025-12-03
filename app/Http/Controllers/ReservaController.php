@@ -12,7 +12,7 @@ use Carbon\Carbon;
 class ReservaController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Muestra un listado del recurso.
      */
     public function index()
     {
@@ -21,7 +21,7 @@ class ReservaController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Muestra el formulario para crear un nuevo recurso.
      */
     public function create()
     {
@@ -31,7 +31,7 @@ class ReservaController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Almacena un recurso recién creado en el almacenamiento.
      */
     public function store(StoreReservaRequest $request)
     {
@@ -52,15 +52,22 @@ class ReservaController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Muestra el recurso especificado.
      */
     public function show(Reserva $reserva)
     {
+        $reserva->load([
+            'cliente',
+            'habitacion.tipoHabitacion',
+            'estancia.serviciosDetalle.servicio',
+            'pagos'
+        ]);
+        
         return view('reservas.show', compact('reserva'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Muestra el formulario para editar el recurso especificado.
      */
     public function edit(Reserva $reserva)
     {
@@ -70,7 +77,7 @@ class ReservaController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Actualiza el recurso especificado en el almacenamiento.
      */
     public function update(UpdateReservaRequest $request, Reserva $reserva)
     {
@@ -91,11 +98,49 @@ class ReservaController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Elimina el recurso especificado del almacenamiento.
+     */
+    /**
+     * Elimina el recurso especificado del almacenamiento.
      */
     public function destroy(Reserva $reserva)
     {
+        // Solo el administrador puede eliminar físicamente
+        if (auth()->user()->role !== 'administrador') {
+            return redirect()->back()->with('error', 'Solo el administrador puede eliminar reservas permanentemente. Utilice la opción de cancelar.');
+        }
+
         $reserva->delete();
-        return redirect()->route('reservas.index')->with('success', 'Reserva eliminada con éxito.');
+        return redirect()->route('reservas.index')->with('success', 'Reserva eliminada permanentemente.');
+    }
+
+    /**
+     * Cancela la reserva.
+     */
+    public function cancelar(\Illuminate\Http\Request $request, Reserva $reserva)
+    {
+        // Validar permisos (Admin, Gerente, Recepcion)
+        if (!in_array(auth()->user()->role, ['administrador', 'gerente', 'recepcion'])) {
+            abort(403, 'No tiene permisos para cancelar reservas.');
+        }
+
+        $request->validate([
+            'motivo_cancelacion' => 'required|string|max:255',
+        ]);
+
+        $reserva->update([
+            'estado' => 'cancelada',
+            'cancelado_por' => auth()->id(),
+            'fecha_cancelacion' => now(),
+            'motivo_cancelacion' => $request->motivo_cancelacion,
+        ]);
+
+        // Liberar habitación si estaba ocupada
+        if ($reserva->habitacion && $reserva->habitacion->estado === 'ocupada') {
+            $reserva->habitacion->update(['estado' => 'disponible']);
+        }
+
+        return redirect()->route('reservas.show', $reserva)
+            ->with('success', 'Reserva cancelada correctamente.');
     }
 }

@@ -22,7 +22,7 @@ class ServicioDetalleController extends Controller
     {
         $estancia_id = $request->get('estancia_id');
         $estancia = Estancia::findOrFail($estancia_id);
-        $servicios = Servicio::where('disponible', 1)->get();
+        $servicios = Servicio::all();
         
         return view('servicio_detalle.create', compact('estancia', 'servicios'));
     }
@@ -36,6 +36,7 @@ class ServicioDetalleController extends Controller
         ]);
 
         $servicio = Servicio::findOrFail($validated['id_servicio']);
+        $estancia = Estancia::findOrFail($validated['id_estancia']);
         
         $servicioDetalle = new ServicioDetalle();
         $servicioDetalle->id_estancia = $validated['id_estancia'];
@@ -45,13 +46,13 @@ class ServicioDetalleController extends Controller
         $servicioDetalle->subtotal = $servicio->precio * $validated['cantidad'];
         $servicioDetalle->save();
 
-        return redirect()->route('reservas.show', $servicioDetalle->estancia->id_reserva)
+        return redirect()->route('reservas.show', $estancia->reserva_id)
             ->with('success', 'Servicio agregado correctamente');
     }
 
     public function edit(ServicioDetalle $servicioDetalle)
     {
-        $servicios = Servicio::where('disponible', 1)->get();
+        $servicios = Servicio::all();
         return view('servicio_detalle.edit', compact('servicioDetalle', 'servicios'));
     }
 
@@ -70,16 +71,46 @@ class ServicioDetalleController extends Controller
         $servicioDetalle->subtotal = $servicio->precio * $validated['cantidad'];
         $servicioDetalle->save();
 
-        return redirect()->route('reservas.show', $servicioDetalle->estancia->id_reserva)
+        return redirect()->route('reservas.show', $servicioDetalle->estancia->reserva_id)
             ->with('success', 'Servicio actualizado correctamente');
     }
 
     public function destroy(ServicioDetalle $servicioDetalle)
     {
+        // Solo el administrador puede eliminar físicamente
+        if (auth()->user()->role !== 'administrador') {
+            return redirect()->back()->with('error', 'Solo el administrador puede eliminar registros permanentemente. Utilice la opción de anular.');
+        }
+
         $reserva_id = $servicioDetalle->estancia->id_reserva;
         $servicioDetalle->delete();
 
         return redirect()->route('reservas.show', $reserva_id)
-            ->with('success', 'Servicio eliminado correctamente');
+            ->with('success', 'Servicio eliminado permanentemente.');
+    }
+
+    public function anular(Request $request, ServicioDetalle $servicioDetalle)
+    {
+        // Validar permisos (Admin, Gerente, Recepcion)
+        if (!in_array(auth()->user()->role, ['administrador', 'gerente', 'recepcion'])) {
+            abort(403, 'No tiene permisos para anular servicios.');
+        }
+
+        $request->validate([
+            'motivo_anulacion' => 'required|string|max:255',
+        ]);
+
+        // Obtener la estancia antes de actualizar
+        $estancia = $servicioDetalle->estancia;
+
+        $servicioDetalle->update([
+            'estado' => 'anulado',
+            'anulado_por' => auth()->id(),
+            'fecha_anulacion' => now(),
+            'motivo_anulacion' => $request->motivo_anulacion,
+        ]);
+
+        return redirect()->route('reservas.show', $estancia->reserva_id)
+            ->with('success', 'Servicio anulado correctamente.');
     }
 }

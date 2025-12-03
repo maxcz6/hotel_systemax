@@ -27,4 +27,14 @@ class Habitacion extends Model
     {
         return $this->hasMany(Reserva::class);
     }
+
+    public function salidas()
+    {
+        return $this->hasMany(Salida::class);
+    }
+
+    public function mantenimientos()
+    {
+        return $this->hasMany(Mantenimiento::class);
+    }
 }

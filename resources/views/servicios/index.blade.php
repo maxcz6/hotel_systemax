@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2>{{ __('Servicios') }}</h2>
-            <a href="{{ route('servicios.create') }}" class="btn">{{ __('Nuevo Servicio') }}</a>
+            <h2>Servicios</h2>
+            <a href="{{ route('servicios.create') }}" class="btn">Nuevo Servicio</a>
         </div>
     </x-slot>
 
