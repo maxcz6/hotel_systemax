@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
         // Todas las funcionalidades de recepción
         Route::resource('clientes', ClienteController::class);
         Route::resource('reservas', ReservaController::class);
+        Route::put('/reservas/{reserva}/cancelar', [ReservaController::class, 'cancelar'])->name('reservas.cancelar');
         Route::get('/checkin/{reserva}', [CheckInController::class, 'show'])->name('checkin.show');
         Route::post('/checkin/{reserva}', [CheckInController::class, 'store'])->name('checkin.store');
         Route::get('/checkout/{reserva}', [CheckOutController::class, 'show'])->name('checkout.show');
@@ -86,6 +87,7 @@ Route::middleware('auth')->group(function () {
         // Acceso a funcionalidades de recepción
         Route::resource('clientes', ClienteController::class);
         Route::resource('reservas', ReservaController::class);
+        Route::put('/reservas/{reserva}/cancelar', [ReservaController::class, 'cancelar'])->name('reservas.cancelar');
         Route::get('/checkin/{reserva}', [CheckInController::class, 'show'])->name('checkin.show');
         Route::post('/checkin/{reserva}', [CheckInController::class, 'store'])->name('checkin.store');
         Route::get('/checkout/{reserva}', [CheckOutController::class, 'show'])->name('checkout.show');
@@ -107,6 +109,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/habitaciones/{habitacion}', [HabitacionController::class, 'show'])->name('habitaciones.show');
         
         Route::resource('reservas', ReservaController::class);
+        Route::put('/reservas/{reserva}/cancelar', [ReservaController::class, 'cancelar'])->name('reservas.cancelar');
         
         // Check-in / Check-out
         Route::get('/checkin/{reserva}', [CheckInController::class, 'show'])->name('checkin.show');
