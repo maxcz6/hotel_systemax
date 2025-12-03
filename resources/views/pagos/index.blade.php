@@ -48,7 +48,7 @@
                                 @if($pago->saldo_pendiente > 0)
                                     <strong class="text-danger">${{ number_format($pago->saldo_pendiente, 2) }}</strong>
                                 @else
-                                    <span class="badge badge-success">✓ Pagado</span>
+                                    <span class="badge badge-success">Pagado</span>
                                 @endif
                             </td>
                             <td><span class="badge badge-outline">{{ ucfirst($pago->metodo_pago) }}</span></td>
@@ -89,49 +89,6 @@
 
         <div class="mt-4">
             {{ $pagos->links() }}
-        </div>
-    </div>
-</x-app-layout>
-                                </span>
-                            </td>
-                            @if(Auth::user()->role === 'administrador')
-                                <td>
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenu{{ $pago->id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="fas fa-cog"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenu{{ $pago->id }}">
-                                            <li><a class="dropdown-item" href="{{ route('pagos.show', $pago->id) }}"><i class="fas fa-eye me-2"></i>Ver Detalles</a></li>
-                                            <li><a class="dropdown-item" href="{{ route('pagos.edit', $pago->id) }}"><i class="fas fa-edit me-2"></i>Editar</a></li>
-                                            @if($pago->estado !== 'anulado')
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li>
-                                                    <form action="{{ route('pagos.destroy', $pago->id) }}" method="POST" style="display: inline;">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="dropdown-item text-danger" onclick="return confirm('¿Está seguro de anular este pago?')">
-                                                            <i class="fas fa-trash me-2"></i>Anular Pago
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                            @endif
-                                        </ul>
-                                    </div>
-                                </td>
-                            @endif
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="{{ Auth::user()->role === 'administrador' ? '11' : '10' }}" class="text-center">No hay pagos registrados</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-
-                <div class="pagination-wrapper">
-                    {{ $pagos->links() }}
-                </div>
-            </div>
         </div>
     </div>
 
