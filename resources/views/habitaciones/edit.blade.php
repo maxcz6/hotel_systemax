@@ -75,10 +75,10 @@
                     <div class="form-group">
                         <label for="estado" class="form-label">Estado *</label>
                         <select name="estado" id="estado" class="form-control" required>
-                            <option value="disponible" {{ old('estado', $habitacion->estado) == 'disponible' ? 'selected' : '' }}>✓ Disponible</option>
-                            <option value="limpieza" {{ old('estado', $habitacion->estado) == 'limpieza' ? 'selected' : '' }}>◐ En Limpieza</option>
-                            <option value="mantenimiento" {{ old('estado', $habitacion->estado) == 'mantenimiento' ? 'selected' : '' }}>⚠ En Mantenimiento</option>
-                            <option value="ocupada" {{ old('estado', $habitacion->estado) == 'ocupada' ? 'selected' : '' }}>● Ocupada</option>
+                            <option value="disponible" {{ old('estado', $habitacion->estado) == 'disponible' ? 'selected' : '' }}>Disponible</option>
+                            <option value="limpieza" {{ old('estado', $habitacion->estado) == 'limpieza' ? 'selected' : '' }}>En Limpieza</option>
+                            <option value="mantenimiento" {{ old('estado', $habitacion->estado) == 'mantenimiento' ? 'selected' : '' }}>En Mantenimiento</option>
+                            <option value="ocupada" {{ old('estado', $habitacion->estado) == 'ocupada' ? 'selected' : '' }}>Ocupada</option>
                         </select>
                         @error('estado')
                         <span class="error-message">{{ $message }}</span>

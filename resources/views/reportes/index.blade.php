@@ -31,7 +31,7 @@
 
             <div class="card">
                 <div class="card-body">
-                    <h3>🛎️ Servicios</h3>
+                    <h3>Servicios</h3>
                     <p>Servicios más utilizados e ingresos</p>
                     <a href="{{ route('reportes.servicios') }}" class="btn btn-primary">Ver Reporte</a>
                 </div>

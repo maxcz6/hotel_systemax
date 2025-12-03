@@ -36,10 +36,10 @@
                             <td>
                                 @php
                                     $estados = [
-                                        'disponible' => ['color' => '#10b981', 'texto' => '✓ Disponible'],
-                                        'ocupada' => ['color' => '#ef4444', 'texto' => '● Ocupada'],
-                                        'limpieza' => ['color' => '#f59e0b', 'texto' => '◐ Limpieza'],
-                                        'mantenimiento' => ['color' => '#6b7280', 'texto' => '⚠ Mantenimiento']
+                                        'disponible' => ['color' => '#10b981', 'texto' => 'Disponible'],
+                                        'ocupada' => ['color' => '#ef4444', 'texto' => 'Ocupada'],
+                                        'limpieza' => ['color' => '#f59e0b', 'texto' => 'Limpieza'],
+                                        'mantenimiento' => ['color' => '#6b7280', 'texto' => 'Mantenimiento']
                                     ];
                                     $estado = $estados[$habitacion->estado] ?? ['color' => '#000', 'texto' => $habitacion->estado];
                                 @endphp

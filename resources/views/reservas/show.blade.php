@@ -73,7 +73,7 @@
 
                 @if($reserva->estado === 'cancelada')
                     <div style="margin-top: 1rem; padding: 1rem; background-color: #fee2e2; border-left: 4px solid #ef4444;">
-                        <strong>🚫 Reserva Cancelada</strong><br>
+                        <strong>Reserva Cancelada</strong><br>
                         <strong>Fecha:</strong> {{ $reserva->fecha_cancelacion ? $reserva->fecha_cancelacion->format('d/m/Y H:i') : 'N/A' }}<br>
                         <strong>Motivo:</strong> {{ $reserva->motivo_cancelacion }}
                     </div>
@@ -308,7 +308,7 @@
                 <div class="card-body">
                     <h3>Servicios Consumidos</h3>
                     <div style="padding: 2rem; text-align: center; color: #6b7280;">
-                        <p>⚠️ No se puede agregar servicios porque aún no se ha realizado el check-in para esta reserva.</p>
+                        <p>No se puede agregar servicios porque aún no se ha realizado el check-in para esta reserva.</p>
                         <p style="margin-top: 0.5rem; font-size: 0.875rem;">El cliente debe hacer check-in primero antes de poder registrar servicios consumidos.</p>
                     </div>
                 </div>

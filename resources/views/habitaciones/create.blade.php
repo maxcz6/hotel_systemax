@@ -140,10 +140,10 @@
                     <div class="form-group">
                         <label for="estado" class="form-label">Estado Inicial *</label>
                         <select name="estado" id="estado" class="form-control" required>
-                            <option value="disponible" {{ old('estado', 'disponible') == 'disponible' ? 'selected' : '' }}>✓ Disponible</option>
-                            <option value="limpieza" {{ old('estado') == 'limpieza' ? 'selected' : '' }}>◐ En Limpieza</option>
-                            <option value="mantenimiento" {{ old('estado') == 'mantenimiento' ? 'selected' : '' }}>⚠ En Mantenimiento</option>
-                            <option value="ocupada" {{ old('estado') == 'ocupada' ? 'selected' : '' }}>● Ocupada</option>
+                            <option value="disponible" {{ old('estado', 'disponible') == 'disponible' ? 'selected' : '' }}>Disponible</option>
+                            <option value="limpieza" {{ old('estado') == 'limpieza' ? 'selected' : '' }}>En Limpieza</option>
+                            <option value="mantenimiento" {{ old('estado') == 'mantenimiento' ? 'selected' : '' }}>En Mantenimiento</option>
+                            <option value="ocupada" {{ old('estado') == 'ocupada' ? 'selected' : '' }}>Ocupada</option>
                         </select>
                         @error('estado')
                         <span class="error-message">{{ $message }}</span>
