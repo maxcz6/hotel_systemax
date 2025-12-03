@@ -6,24 +6,44 @@
                 <ul>
                     <li><a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a></li>
                     
-                    @if(Auth::user()->role === 'recepcion' || Auth::user()->role === 'gerente')
+                    @if(Auth::user()->role === 'administrador')
+                        {{-- Administrador tiene acceso a TODO --}}
+                        <li><a href="{{ route('usuarios.index') }}">{{ __('Users') }}</a></li>
+                        <li><a href="{{ route('clientes.index') }}">{{ __('Clients') }}</a></li>
+                        <li><a href="{{ route('habitaciones.index') }}">{{ __('Rooms') }}</a></li>
+                        <li><a href="{{ route('reservas.index') }}">{{ __('Reservations') }}</a></li>
+                        <li><a href="{{ route('pagos.index') }}">{{ __('Payments') }}</a></li>
+                        <li><a href="{{ route('tipo_habitaciones.index') }}">{{ __('Room Types') }}</a></li>
+                        <li><a href="{{ route('servicios.index') }}">{{ __('Services') }}</a></li>
+                        <li><a href="{{ route('reportes.index') }}">{{ __('Reports') }}</a></li>
+                    @endif
+                    
+                    @if(Auth::user()->role === 'gerente')
+                        {{-- Gerente tiene gestión operativa y reportes --}}
+                        <li><a href="{{ route('clientes.index') }}">{{ __('Clients') }}</a></li>
+                        <li><a href="{{ route('habitaciones.index') }}">{{ __('Rooms') }}</a></li>
+                        <li><a href="{{ route('reservas.index') }}">{{ __('Reservations') }}</a></li>
+                        <li><a href="{{ route('pagos.index') }}">{{ __('Payments') }}</a></li>
+                        <li><a href="{{ route('tipo_habitaciones.index') }}">{{ __('Room Types') }}</a></li>
+                        <li><a href="{{ route('servicios.index') }}">{{ __('Services') }}</a></li>
+                        <li><a href="{{ route('reportes.index') }}">{{ __('Reports') }}</a></li>
+                    @endif
+                    
+                    @if(Auth::user()->role === 'recepcion')
+                        {{-- Recepción tiene operaciones diarias --}}
                         <li><a href="{{ route('clientes.index') }}">{{ __('Clients') }}</a></li>
                         <li><a href="{{ route('habitaciones.index') }}">{{ __('Rooms') }}</a></li>
                         <li><a href="{{ route('reservas.index') }}">{{ __('Reservations') }}</a></li>
                         <li><a href="{{ route('pagos.index') }}">{{ __('Payments') }}</a></li>
                     @endif
-                    
-                    @if(Auth::user()->role === 'gerente')
-                        <li><a href="{{ route('tipo_habitaciones.index') }}">{{ __('Room Types') }}</a></li>
-                        <li><a href="{{ route('servicios.index') }}">{{ __('Services') }}</a></li>
-                        <li><a href="{{ route('reportes.index') }}">{{ __('Reports') }}</a></li>
-                    @endif
 
                     @if(Auth::user()->role === 'limpieza')
+                        {{-- Limpieza solo ve habitaciones --}}
                         <li><a href="{{ route('limpieza.habitaciones') }}">{{ __('Rooms') }}</a></li>
                     @endif
 
                     @if(Auth::user()->role === 'mantenimiento')
+                        {{-- Mantenimiento solo ve habitaciones --}}
                         <li><a href="{{ route('mantenimiento.habitaciones') }}">{{ __('Rooms') }}</a></li>
                     @endif
                 </ul>

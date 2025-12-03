@@ -15,7 +15,17 @@ class RolesAndUsersSeeder extends Seeder
     {
         // Crear usuarios con diferentes roles
         
-        // 1. Usuario Gerente
+        // 1. Usuario Administrador
+        User::firstOrCreate(
+            ['email' => 'admin@hotel.com'],
+            [
+                'name' => 'Administrador',
+                'password' => Hash::make('password123'),
+                'role' => 'administrador',
+            ]
+        );
+
+        // 2. Usuario Gerente
         User::firstOrCreate(
             ['email' => 'gerente@hotel.com'],
             [
@@ -25,7 +35,7 @@ class RolesAndUsersSeeder extends Seeder
             ]
         );
 
-        // 2. Usuario Recepción
+        // 3. Usuario Recepción
         User::firstOrCreate(
             ['email' => 'recepcion@hotel.com'],
             [
@@ -35,7 +45,7 @@ class RolesAndUsersSeeder extends Seeder
             ]
         );
 
-        // 3. Usuario Limpieza
+        // 4. Usuario Limpieza
         User::firstOrCreate(
             ['email' => 'limpieza@hotel.com'],
             [
@@ -45,7 +55,7 @@ class RolesAndUsersSeeder extends Seeder
             ]
         );
 
-        // 4. Usuario Mantenimiento
+        // 5. Usuario Mantenimiento
         User::firstOrCreate(
             ['email' => 'mantenimiento@hotel.com'],
             [
@@ -56,9 +66,10 @@ class RolesAndUsersSeeder extends Seeder
         );
 
         $this->command->info('✓ Usuarios creados:');
-        $this->command->info('  - gerente@hotel.com (password: password123)');
-        $this->command->info('  - recepcion@hotel.com (password: password123)');
-        $this->command->info('  - limpieza@hotel.com (password: password123)');
-        $this->command->info('  - mantenimiento@hotel.com (password: password123)');
+        $this->command->info('  - admin@hotel.com (password: password123) - ADMINISTRADOR');
+        $this->command->info('  - gerente@hotel.com (password: password123) - GERENTE');
+        $this->command->info('  - recepcion@hotel.com (password: password123) - RECEPCIÓN');
+        $this->command->info('  - limpieza@hotel.com (password: password123) - LIMPIEZA');
+        $this->command->info('  - mantenimiento@hotel.com (password: password123) - MANTENIMIENTO');
     }
 }
