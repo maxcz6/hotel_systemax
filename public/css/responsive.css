@@ -531,8 +531,9 @@ nav ul li a {
     padding: clamp(0.4rem, 1.5vw, 0.6rem) clamp(0.6rem, 2vw, 1rem);
     color: var(--color-text);
     font-size: clamp(0.8rem, 1.5vw, 0.95rem);
+    font-weight: 500;
     border-radius: var(--radius-sm);
-    transition: var(--transition);
+    transition: background-color 0.2s ease, color 0.2s ease;
     white-space: nowrap;
 }
 
@@ -540,7 +541,6 @@ nav ul li a:hover,
 nav ul li a.active {
     background-color: var(--color-primary-light);
     color: var(--color-primary);
-    font-weight: 600;
 }
 
 .user-menu {
