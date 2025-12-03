@@ -28,15 +28,15 @@
                             <td>
                                 <span class="badge badge-{{ $usuario->role }}">
                                     @if($usuario->role === 'administrador')
-                                        👑 Administrador
+                                        Administrador
                                     @elseif($usuario->role === 'gerente')
-                                        👔 Gerente
+                                        Gerente
                                     @elseif($usuario->role === 'recepcion')
-                                        🏨 Recepción
+                                        Recepción
                                     @elseif($usuario->role === 'limpieza')
-                                        🧹 Limpieza
+                                        Limpieza
                                     @elseif($usuario->role === 'mantenimiento')
-                                        🔧 Mantenimiento
+                                        Mantenimiento
                                     @else
                                         {{ $usuario->role }}
                                     @endif

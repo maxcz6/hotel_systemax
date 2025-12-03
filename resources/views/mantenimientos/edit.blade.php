@@ -1,7 +1,7 @@
 <x-app-layout>
     <div class="container">
         <div class="page-header">
-            <h1>✏️ Editar Mantenimiento #{{ $mantenimiento->id }}</h1>
+            <h1>Editar Mantenimiento #{{ $mantenimiento->id }}</h1>
         </div>
 
         <form action="{{ route('mantenimientos.update', $mantenimiento) }}" method="POST">

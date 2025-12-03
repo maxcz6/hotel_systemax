@@ -5,19 +5,19 @@
 
     <div class="dashboard-grid">
         <div class="dashboard-card" style="background: #fef3c7;">
-            <h3>🔧 Habitaciones en Mantenimiento</h3>
+            <h3>Habitaciones en Mantenimiento</h3>
             <p class="big-number" style="color: #f59e0b;">{{ $habitacionesMantenimiento }}</p>
         </div>
         <div class="dashboard-card" style="background: #d1fae5;">
-            <h3>✅ Habitaciones Disponibles</h3>
+            <h3>Habitaciones Disponibles</h3>
             <p class="big-number" style="color: #10b981;">{{ $habitacionesDisponibles }}</p>
         </div>
         <div class="dashboard-card" style="background: #fee2e2;">
-            <h3>🔴 Habitaciones Ocupadas</h3>
+            <h3>Habitaciones Ocupadas</h3>
             <p class="big-number" style="color: #ef4444;">{{ $habitacionesOcupadas }}</p>
         </div>
         <div class="dashboard-card">
-            <h3>🏨 Total Habitaciones</h3>
+            <h3>Total Habitaciones</h3>
             <p class="big-number">{{ $totalHabitaciones }}</p>
         </div>
     </div>

@@ -23,11 +23,11 @@
                                 <p><strong>Monto Pagado:</strong> <span class="h5 text-success">${{ number_format($pago->monto, 2) }}</span></p>
                                 <p><strong>Método de Pago:</strong> 
                                     @if($pago->metodo_pago === 'efectivo')
-                                        <span class="badge badge-info">💵 Efectivo</span>
+                                        <span class="badge badge-info">Efectivo</span>
                                     @elseif($pago->metodo_pago === 'tarjeta')
-                                        <span class="badge badge-info">💳 Tarjeta</span>
+                                        <span class="badge badge-info">Tarjeta</span>
                                     @elseif($pago->metodo_pago === 'transferencia')
-                                        <span class="badge badge-info">🏦 Transferencia</span>
+                                        <span class="badge badge-info">Transferencia</span>
                                     @endif
                                 </p>
                                 <p><strong>Estado:</strong> 
@@ -126,7 +126,7 @@
                                         @if($saldoPendiente > 0)
                                             -${{ number_format($saldoPendiente, 2) }}
                                         @else
-                                            ✓ PAGADO
+                                            PAGADO
                                         @endif
                                     </strong>
                                 </td>
